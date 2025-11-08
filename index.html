@@ -28,6 +28,9 @@
       <button class="tab-button" onclick="openTab(event, 'tab-finales')">
         <i class="fas fa-medal"></i> Eliminatorias
       </button>
+      <button class="tab-button" onclick="openTab(event, 'tab-galeria')">
+        <i class="fas fa-images"></i> Galería
+      </button>
     </div>
     <div id="tab-parejas" class="tab-content card" style="display: block;">
       <div class="section-header">
@@ -90,6 +93,17 @@
       </div>
     </div>
 
+    <div id="tab-galeria" class="tab-content card">
+      <h2><i class="fas fa-images"></i> Galería del Torneo</h2>
+      <div class="carousel-container">
+        <div class="carousel-slide">
+          <!-- Las imágenes se cargarán aquí dinámicamente -->
+        </div>
+        <button class="carousel-button prev" onclick="moveSlide(-1)">&#10094;</button>
+        <button class="carousel-button next" onclick="moveSlide(1)">&#10095;</button>
+      </div>
+    </div>
+
     <!-- Contenedor para notificaciones -->
     <div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
         <!-- Las notificaciones se añadirán aquí -->
@@ -137,6 +151,9 @@
       }
       if (tabId === 'tab-clasificacion') {
           handleShowStandings();
+      }
+      if (tabId === 'tab-galeria') {
+          initGallery();
       }
     }
     
@@ -614,6 +631,79 @@
       showNotification('Resultado de 3er puesto registrado.');
       handleGenerateFinals(); 
     }
+
+    // --- Lógica de la Galería ---
+    let slideIndex = 0;
+    let imageFiles = []; // La lista se generará dinámicamente
+    let galleryInitialized = false; // Para evitar recargar las imágenes cada vez
+
+    // Función para comprobar si una imagen existe
+    function checkImage(url) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);  // La imagen existe y se cargó
+            img.onerror = () => resolve(false); // La imagen no existe o hay un error
+            img.src = url;
+        });
+    }
+
+    async function initGallery() {
+        const slideContainer = document.querySelector('.carousel-slide');
+        if (!slideContainer) return;
+
+        // Si la galería ya se inicializó, no hacemos nada más
+        if (galleryInitialized) {
+            showSlide(slideIndex);
+            return;
+        }
+
+        slideContainer.innerHTML = '<p>Cargando galería...</p>';
+        imageFiles = []; // Reseteamos la lista
+
+        for (let i = 1; ; i++) {
+            const imageUrl = `img/img${i}.jpg`;
+            const exists = await checkImage(imageUrl);
+            if (exists) {
+                imageFiles.push(imageUrl); // Añadimos la URL completa
+            } else {
+                break; // Detenemos el bucle cuando una imagen no se encuentra
+            }
+        }
+
+        galleryInitialized = true; // Marcamos como inicializada
+
+        if (imageFiles.length > 0) {
+            slideContainer.innerHTML = imageFiles.map(url => `<img src="${url}" alt="Foto del torneo ${imageFiles.indexOf(url) + 1}">`).join('');
+            showSlide(0); // Mostramos la primera imagen
+        } else {
+            slideContainer.innerHTML = '<p>No se encontraron imágenes para la galería.</p>';
+        }
+    }
+
+    function moveSlide(n) {
+        showSlide(slideIndex += n);
+    }
+
+    function showSlide(n) {
+        const slides = document.querySelectorAll('.carousel-slide img');
+        if (slides.length === 0) return;
+
+        if (n >= slides.length) {
+            slideIndex = 0;
+        }
+        if (n < 0) {
+            slideIndex = slides.length - 1;
+        }
+
+        // Ocultar todas las imágenes
+        for (let i = 0; i < slides.length; i++) {
+            slides[i].style.display = 'none';
+        }
+
+        // Mostrar solo la imagen actual
+        slides[slideIndex].style.display = 'block';
+    }
+
   </script>
 
 </body>

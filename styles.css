@@ -440,4 +440,88 @@ input:focus, select:focus {
       width: 100%;
       text-align: center;
   }
+
+  /* --- Optimización de Tablas de Resultados para Móvil --- */
+  .result-table {
+    display: block; /* Rompemos el comportamiento de tabla */
+    width: 100%;
+  }
+  .result-table thead {
+    display: none; /* Ocultamos las cabeceras, no son necesarias en este layout */
+  }
+  .result-table tbody, .result-table tr, .result-table td {
+    display: block; /* Hacemos que todo se comporte como bloques */
+    width: 100%;
+  }
+  .result-table tr {
+    margin-bottom: 15px; /* Espacio entre cada "bloque" de pareja */
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 10px;
+  }
+  .result-table td:first-child {
+    font-weight: bold; /* Destacamos el nombre de la pareja */
+    margin-bottom: 10px;
+    min-width: unset; /* Reseteamos el ancho mínimo */
+  }
+  .result-table td {
+    text-align: left; /* Alineamos todo a la izquierda */
+    border: none;
+    padding: 5px 0;
+  }
+  .result-table td[rowspan="2"] {
+    padding-top: 15px; /* Más espacio para el botón de registrar */
+  }
+}
+ /* --- Estilos de la Galería / Carrusel --- */
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px; /* Ancho máximo para el carrusel */
+  height: 500px; /* Altura fija para crear el "marco" */
+  margin: auto;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: #e0e0e0; /* Un fondo por si alguna imagen no carga */
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Magia: Escala la imagen para llenar el contenedor sin deformarla */
+  display: none; /* Ocultamos todas por defecto */
+  vertical-align: middle;
+}
+
+.carousel-button {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -22px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  transition: 0.6s ease;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+  background-color: rgba(0,0,0,0.4);
+  border: none;
+}
+
+.prev {
+  left: 0;
+  border-radius: 0 3px 3px 0;
+}
+
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+.carousel-button:hover {
+  background-color: rgba(0,0,0,0.8);
 }
