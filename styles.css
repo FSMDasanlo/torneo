@@ -1,0 +1,365 @@
+/* Paleta de colores:
+   - Primario: #34495e (Azul Oscuro, Elegante)
+   - Acento: #8BC34A (Verde Lima, Pádel)
+   - Fondo: #f7f9fb (Blanco Roto Suave)
+*/
+
+body {
+  font-family: 'Poppins', sans-serif; /* Fuente moderna */
+  margin: 0;
+  padding: 0;
+  background: #f7f9fb; /* Fondo suave */
+  color: #333;
+}
+
+.container {
+  max-width: 960px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+h1 {
+  color: #34495e;
+  font-size: 2.5em;
+  font-weight: 700;
+  border-bottom: 3px solid #8BC34A; /* Subrayado de acento */
+  padding-bottom: 10px;
+  display: inline-block;
+}
+
+h2 {
+  color: #4a6572;
+  font-size: 1.5em;
+  border-left: 5px solid #8BC34A;
+  padding-left: 10px;
+  margin-bottom: 15px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Sombra más pronunciada pero suave */
+  margin-bottom: 25px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+/* --- Formularios e Inputs --- */
+.input-group, .set-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+input, select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  flex-grow: 1;
+  font-size: 1em;
+  transition: border-color 0.3s;
+}
+
+input:focus, select:focus {
+  border-color: #8BC34A;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 195, 74, 0.3);
+}
+
+/* --- Botones Generales --- */
+.btn-primary, .btn-secondary {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s, transform 0.2s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background-color: #34495e;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #4a6572;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #8BC34A;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #9ccc65;
+  transform: translateY(-2px);
+}
+
+/* --- Estilos de gestión de Parejas y Límite --- */
+
+.input-limit {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.input-limit input[type="number"] {
+    width: 60px;
+    text-align: center;
+    flex-grow: 0;
+}
+
+.pair-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 5px; 
+}
+
+.pair-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-icon {
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    background-color: transparent;
+    color: #34495e;
+    transition: background-color 0.2s;
+}
+
+.btn-edit {
+    border: 1px solid #ccc;
+}
+
+.btn-delete {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #ecf0f1;
+}
+
+.btn-delete:hover {
+    background-color: #c0392b;
+}
+
+.limit-reached {
+    color: #e74c3c;
+    font-weight: 600;
+    padding: 5px 0;
+}
+
+/* --- Estilos de Cajas de Parejas (ACTUALIZADO) --- */
+
+.pair-box {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin: 0 5px;
+    white-space: nowrap; 
+    color: #333; 
+    /* El color de fondo y el borde se aplican con estilo inline desde index.html */
+}
+
+
+/* --- Listados de Partidos y Resultados --- */
+.match-item {
+  background: #f4f6f8;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  /* Permitir que los nombres de pareja envuelvan en pantallas pequeñas */
+  flex-wrap: wrap; 
+  font-weight: 500;
+}
+
+.match-group {
+  font-weight: 700;
+  color: #34495e;
+  margin-right: 15px;
+}
+
+.vs {
+  font-weight: 700;
+  color: #4a6572; /* Color más oscuro para el separador */
+  margin: 0 10px;
+}
+
+.result-form-item, .knockout-match {
+  border: 1px solid #eee;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Estado de partido completado */
+.match-completed {
+    border: 2px solid #8BC34A;
+    background-color: #e6f7e0;
+}
+
+.winner-label {
+    font-weight: 700;
+    color: #34495e;
+    padding: 5px 0;
+    border-top: 1px dashed #ccc;
+    margin-top: 5px;
+    padding-top: 5px;
+}
+
+/* Asegurar que las cajas se vean bien dentro de la etiqueta bold en resultados */
+.result-form-item b .pair-box {
+    font-weight: 700;
+}
+
+
+/* --- Tablas de Clasificación --- */
+.standings-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.standings-table th, .standings-table td {
+  border: none;
+  padding: 12px;
+  text-align: center;
+}
+
+.standings-table th {
+  background-color: #34495e;
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+.standings-table tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+
+.standings-table tr:hover {
+  background-color: #eff3f7;
+}
+
+/* Redondeo de esquinas para la tabla */
+.standings-table th:first-child { border-top-left-radius: 8px; }
+.standings-table th:last-child { border-top-right-radius: 8px; }
+.standings-table tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+.standings-table tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+
+/* --- Estilos de Pestañas (Tabs) --- */
+
+.tab-navigation {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  border-bottom: 3px solid #eee;
+  margin-bottom: 25px;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 12px 15px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 600;
+  color: #777;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent; 
+}
+
+.tab-button:hover {
+  color: #34495e;
+}
+
+.tab-button.active {
+  color: #34495e; /* Color principal */
+  border-bottom: 3px solid #8BC34A; /* Acento de color Pádel */
+  font-weight: 700;
+}
+
+/* Ocultar todo el contenido de las pestañas por defecto */
+.tab-content {
+  display: none;
+}
+
+/* Ajustes para que el card se vea bien dentro del tab-content */
+#tab-grupos .section.card,
+#tab-finales .section.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); 
+    margin-bottom: 25px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .input-group, .set-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  input, select, .btn-primary, .btn-secondary {
+    width: 100%;
+  }
+  .tab-navigation {
+    flex-direction: column;
+  }
+  .tab-button {
+    width: 100%;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  .tab-button.active {
+    border-left: 5px solid #8BC34A;
+    border-bottom: 1px solid #eee;
+  }
+  /* Ajuste para el listado de parejas en móvil */
+  .pair-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+  }
+  .pair-actions {
+      align-self: flex-end;
+  }
+  /* Para que el match-item se vea bien en móvil */
+  .match-item {
+      align-items: flex-start;
+      flex-direction: column;
+  }
+  .match-item .pair-box {
+      /* Asegura que las cajas de pareja no rompan el layout en móvil */
+      margin: 5px 0;
+      width: 100%;
+      text-align: center;
+  }
+}

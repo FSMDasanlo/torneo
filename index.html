@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Torneo de Padel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-tennis-ball"></i> Torneo de Padel</h1>
+    </header>
+
+    <div class="tab-navigation card">
+      <button class="tab-button active" onclick="openTab(event, 'tab-parejas')">
+        <i class="fas fa-users"></i> Parejas
+      </button>
+      <button class="tab-button" onclick="openTab(event, 'tab-grupos')">
+        <i class="fas fa-calendar-alt"></i> Grupos y Resultados
+      </button>
+      <button class="tab-button" onclick="openTab(event, 'tab-clasificacion')">
+        <i class="fas fa-trophy"></i> Clasificación
+      </button>
+      <button class="tab-button" onclick="openTab(event, 'tab-finales')">
+        <i class="fas fa-medal"></i> Eliminatorias
+      </button>
+    </div>
+    <div id="tab-parejas" class="tab-content card" style="display: block;">
+      <h2><i class="fas fa-user-plus"></i> Añadir pareja</h2>
+      
+      <div class="input-limit">
+          <label for="limitInput">Límite de parejas por grupo:</label>
+          <input type="number" id="limitInput" value="4" min="2" onchange="handleUpdateLimit()">
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <select id="groupSelect">
+          <option value="1">Grupo 1</option>
+          <option value="2">Grupo 2</option>
+        </select>
+        <input type="text" id="player1" placeholder="Jugador 1">
+        <input type="text" id="player2" placeholder="Jugador 2">
+        <button class="btn-primary" onclick="handleAddPair()"><i class="fas fa-plus"></i> Añadir</button>
+      </div>
+      <div id="currentPairs" class="match-list" style="margin-top: 20px;"></div> 
+    </div>
+
+    <div id="tab-grupos" class="tab-content">
+      <div class="section card">
+        <h2><i class="fas fa-table-tennis"></i> Partidos de fase de grupos</h2>
+        <button class="btn-primary" onclick="handleGenerateGroupMatches()"><i class="fas fa-cogs"></i> Generar partidos</button>
+        <div id="matchesList" class="match-list"></div>
+      </div>
+      <div class="section card">
+        <h2><i class="fas fa-clipboard-check"></i> Registrar resultados</h2>
+        <div id="resultForms" class="result-forms-list"></div>
+      </div>
+    </div>
+
+    <div id="tab-clasificacion" class="tab-content card">
+      <h2><i class="fas fa-sort-amount-down"></i> Clasificación de Grupos</h2>
+      <button class="btn-primary" onclick="handleShowStandings()"><i class="fas fa-eye"></i> Ver clasificación</button>
+      <div id="standings" class="standings-view"></div>
+    </div>
+
+    <div id="tab-finales" class="tab-content">
+      <div class="section card">
+        <h2><i class="fas fa-chevron-circle-right"></i> Semifinales</h2>
+        <button class="btn-primary" onclick="handleGenerateSemifinals()"><i class="fas fa-cogs"></i> Crear semifinales</button>
+        <div id="semis" class="semis-view"></div>
+      </div>
+      <div class="section card">
+        <h2><i class="fas fa-medal"></i> Final y 3er puesto</h2>
+        <button class="btn-primary" onclick="handleGenerateFinals()"><i class="fas fa-cogs"></i> Generar final y 3er puesto</button>
+        <div id="finals" class="finals-view"></div>
+      </div>
+    </div>
+
+  </div> <script src="app.js"></script>
+  <script>
+    // --- Lógica de formato para las parejas (ACTUALIZADA) ---
+    function formatPairDisplay(pair) {
+        const separator = ' - '; 
+        const pairName = pair.players.join(separator);
+        // Usa el color asignado a la pareja (pair.color)
+        return `<span class="pair-box" style="background-color: ${pair.color}; border: 1px solid ${pair.color.replace('C', 'B').replace('F', 'E')};">${pairName}</span>`;
+    }
+    
+    // --- Lógica de Pestañas ---
+    function openTab(evt, tabId) {
+      var tabContents = document.getElementsByClassName("tab-content");
+      for (var i = 0; i < tabContents.length; i++) {
+        tabContents[i].style.display = "none";
+      }
+
+      var tabButtons = document.getElementsByClassName("tab-button");
+      for (var i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+      }
+
+      document.getElementById(tabId).style.display = "block";
+      evt.currentTarget.className += " active";
+      
+      // Asegurar que los datos se rendericen al cambiar de pestaña
+      if (tabId === 'tab-parejas') renderCurrentPairs();
+      if (tabId === 'tab-grupos') {
+          if (matches.length > 0) {
+              handleGenerateGroupMatches(); 
+          }
+      }
+      if (tabId === 'tab-finales') {
+          if (semifinals.length > 0) {
+              handleGenerateSemifinals(); 
+          }
+          if (finalMatch || thirdPlace) {
+              handleGenerateFinals();
+          }
+      }
+    }
+    
+    // Inicialización al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+        // Se asume que loadFromLocalStorage() se llama al final de app.js
+        
+        // Abre la pestaña de Parejas al inicio
+        document.getElementById('tab-parejas').style.display = "block";
+        
+        // Renderizado inicial
+        renderCurrentPairs();
+        // Inicializa el input de límite con el valor cargado de localStorage (o 4 por defecto)
+        document.getElementById('limitInput').value = groupLimit; 
+    });
+    
+    // --- Funciones de Parejas (Gestión de UI) ---
+
+    function handleUpdateLimit(){
+        const newLimit = parseInt(document.getElementById('limitInput').value);
+        if (newLimit >= 2) {
+            updateGroupLimit(newLimit); // Llama a la lógica de app.js (guarda en localStorage)
+            renderCurrentPairs(); // Redibuja para que se actualice el mensaje de límite
+        } else {
+            alert('El límite debe ser al menos 2.');
+            document.getElementById('limitInput').value = groupLimit; // Vuelve al valor anterior
+        }
+    }
+
+    // Renderiza el listado de parejas actual (usado por handleAddPair y openTab)
+    function renderCurrentPairs(){
+      const container = document.getElementById('currentPairs');
+      container.innerHTML = '<h4>Parejas Registradas:</h4>';
+
+      for(const g of [1, 2]){
+        container.innerHTML += `<h5><i class="fas fa-users-cog"></i> Grupo ${g} (${groups[g].length}/${groupLimit} parejas)</h5>`;
+        
+        if (groups[g].length === groupLimit) {
+             container.innerHTML += `<p class="limit-reached">¡Límite de ${groupLimit} parejas alcanzado para el Grupo ${g}!</p>`;
+        }
+
+        groups[g].forEach(p => {
+            const pairNameDisplay = formatPairDisplay(p); // Usa la función de formato
+            container.innerHTML += `
+            <div class="match-item pair-item">
+                <span>${pairNameDisplay}</span>
+                <div class="pair-actions">
+                    <button class="btn-icon btn-edit" onclick="handleEditPair(${p.id}, ${g})"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon btn-delete" onclick="handleDeletePair(${p.id})"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>`;
+        });
+      }
+    }
+
+    function handleAddPair(){
+      const group = parseInt(document.getElementById('groupSelect').value);
+      const p1 = document.getElementById('player1').value.trim();
+      const p2 = document.getElementById('player2').value.trim();
+      
+      if(p1 && p2){
+        if (groups[group].length >= groupLimit) {
+             alert(`ERROR: No se pueden añadir más de ${groupLimit} parejas al Grupo ${group}.`);
+             return;
+        }
+
+        addPair(group, p1, p2);
+        alert(`Pareja ${p1} - ${p2} añadida al grupo ${group}`);
+        document.getElementById('player1').value = '';
+        document.getElementById('player2').value = '';
+        renderCurrentPairs(); 
+      }
+    }
+
+    function handleDeletePair(pairId){
+        if(confirm('¿Estás seguro de que quieres eliminar esta pareja? Esto borrará cualquier resultado asociado.')){
+            deletePair(pairId); // Lógica en app.js
+            renderCurrentPairs();
+        }
+    }
+
+    function handleEditPair(pairId, groupId){
+        const pair = groups[groupId].find(p => p.id === pairId);
+        if (!pair) return;
+
+        const newP1 = prompt(`Editar Jugador 1 de la pareja ${pair.players.join(' - ')}:`, pair.players[0]);
+        if (newP1 === null) return; 
+
+        const newP2 = prompt(`Editar Jugador 2 de la pareja ${pair.players.join(' - ')}:`, pair.players[1]);
+        if (newP2 === null) return;
+
+        if (newP1.trim() && newP2.trim()){
+            editPair(pairId, newP1.trim(), newP2.trim()); // Lógica en app.js
+            renderCurrentPairs();
+        } else {
+            alert('Ambos nombres de jugador son obligatorios.');
+        }
+    }
+
+    // --- Funciones de Partidos ---
+
+    function handleGenerateGroupMatches(){
+      generateGroupMatches();
+      const container = document.getElementById('matchesList');
+      container.innerHTML = '';
+      matches.forEach(m => {
+        const pairA = formatPairDisplay(m.a); // Usar m.a (objeto pareja)
+        const pairB = formatPairDisplay(m.b); // Usar m.b (objeto pareja)
+        container.innerHTML += `<div class="match-item"><span class="match-group">Grupo ${m.group}:</span> ${pairA} <span class="vs">vs</span> ${pairB}</div>`; 
+      });
+      renderResultForms();
+    }
+
+    function renderResultForms(){
+      const container = document.getElementById('resultForms');
+      container.innerHTML = '';
+      matches.forEach(m => {
+        const id = m.id;
+        const match = matches.find(mt => mt.id === id);
+        const s1Val = match.sets[0] ? `${match.sets[0][0]}-${match.sets[0][1]}` : '';
+        const s2Val = match.sets[1] ? `${match.sets[1][0]}-${match.sets[1][1]}` : '';
+        const s3Val = match.sets[2] ? `${match.sets[2][0]}-${match.sets[2][1]}` : '';
+
+        container.innerHTML += `
+          <div class="result-form-item">
+            <b>${formatPairDisplay(m.a)} vs ${formatPairDisplay(m.b)}</b>
+            <div class="set-inputs">
+              <input placeholder="Set 1 (Ej: 6-4)" size="15" id="s1-${id}" value="${s1Val}">
+              <input placeholder="Set 2 (Ej: 6-4)" size="15" id="s2-${id}" value="${s2Val}">
+              <input placeholder="Set 3 (Ej: 6-4)" size="15" id="s3-${id}" value="${s3Val}">
+            </div>
+            <button class="btn-secondary" onclick="handleRecordResult(${id})"><i class="fas fa-check"></i> Registrar</button>
+          </div>
+        `;
+      });
+    }
+
+    function handleRecordResult(id){
+      const s1 = parseSet(document.getElementById(`s1-${id}`).value);
+      const s2 = parseSet(document.getElementById(`s2-${id}`).value);
+      const s3 = parseSet(document.getElementById(`s3-${id}`).value);
+      recordResult(id, s1, s2, s3);
+      alert('Resultado registrado');
+    }
+
+    function parseSet(str){
+      if(!str) return null;
+      const nums = str.split('-').map(n => parseInt(n.trim()));
+      return nums.length===2 ? nums : null;
+    }
+
+    function handleShowStandings(){
+      const st = computeStandings();
+      const container = document.getElementById('standings');
+      container.innerHTML = '';
+      for(const g of [1,2]){
+        container.innerHTML += `<h3><i class="fas fa-list-ol"></i> Grupo ${g}</h3>`;
+        container.innerHTML += `<table class="standings-table"><tr><th>Pareja</th><th>Puntos</th><th>Sets</th><th>Juegos</th></tr>`; 
+        st[g].forEach(r => {
+            const pairNameDisplay = formatPairDisplay(r.pair);
+            container.innerHTML += `<tr><td>${pairNameDisplay}</td><td>${r.puntos}</td><td>${r.sets}</td><td>${r.juegos}</td></tr>`;
+        });
+        container.innerHTML += `</table>`;
+      }
+    }
+
+    function handleGenerateSemifinals(){
+      generateSemifinals();
+      const container = document.getElementById('semis');
+      container.innerHTML = '';
+      semifinals.forEach(s => {
+        const id = s.id;
+        
+        const s1Val = s.sets[0] ? `${s.sets[0][0]}-${s.sets[0][1]}` : '';
+        const s2Val = s.sets[1] ? `${s.sets[1][0]}-${s.sets[1][1]}` : '';
+        const s3Val = s.sets[2] ? `${s.sets[2][0]}-${s.sets[2][1]}` : '';
+
+        const pairA = formatPairDisplay(s.a);
+        const pairB = formatPairDisplay(s.b);
+        const winnerDisplay = s.winner === s.a.id ? pairA : pairB;
+
+        container.innerHTML += `
+          <div class="knockout-match ${s.winner ? 'match-completed' : ''}">
+            <b>${pairA} vs ${pairB}</b>
+            ${s.winner ? `<p class="winner-label"><i class="fas fa-hand-point-right"></i> Ganador: ${winnerDisplay}</p>` : ''}
+            <div class="set-inputs">
+              <input placeholder="Set 1 (Ej: 6-4)" size="15" id="semi1-${id}" value="${s1Val}">
+              <input placeholder="Set 2 (Ej: 6-4)" size="15" id="semi2-${id}" value="${s2Val}">
+              <input placeholder="Set 3 (Ej: 6-4)" size="15" id="semi3-${id}" value="${s3Val}">
+            </div>
+            <button class="btn-secondary" onclick="handleRecordSemi(${id})"><i class="fas fa-check"></i> Registrar</button>
+          </div>
+        `;
+      });
+    }
+
+    function handleRecordSemi(id){
+      const s1 = parseSet(document.getElementById(`semi1-${id}`).value);
+      const s2 = parseSet(document.getElementById(`semi2-${id}`).value);
+      const s3 = parseSet(document.getElementById(`semi3-${id}`).value);
+      recordSemiResult(id, s1, s2, s3);
+      alert('Resultado de semifinal registrado');
+      handleGenerateSemifinals(); 
+    }
+
+    function handleGenerateFinals(){
+      generateFinals();
+      const container = document.getElementById('finals');
+      container.innerHTML = '';
+
+      if(finalMatch){
+        const fm_s1 = finalMatch.sets[0] ? `${finalMatch.sets[0][0]}-${finalMatch.sets[0][1]}` : '';
+        const fm_s2 = finalMatch.sets[1] ? `${finalMatch.sets[1][0]}-${finalMatch.sets[1][1]}` : '';
+        const fm_s3 = finalMatch.sets[2] ? `${finalMatch.sets[2][0]}-${finalMatch.sets[2][1]}` : '';
+        
+        const pairA = formatPairDisplay(finalMatch.a);
+        const pairB = formatPairDisplay(finalMatch.b);
+        const winnerDisplay = finalMatch.winner === finalMatch.a.id ? pairA : pairB;
+
+        container.innerHTML += `<div class="knockout-match ${finalMatch.winner ? 'match-completed' : ''}"><h4><i class="fas fa-crown"></i> Final</h4>
+          <b>${pairA} vs ${pairB}</b>
+          ${finalMatch.winner ? `<p class="winner-label"><i class="fas fa-trophy"></i> CAMPEONES: ${winnerDisplay}</p>` : ''}
+          <div class="set-inputs">
+            <input placeholder="Set 1 (Ej: 6-4)" size="15" id="final1" value="${fm_s1}">
+            <input placeholder="Set 2 (Ej: 6-4)" size="15" id="final2" value="${fm_s2}">
+            <input placeholder="Set 3 (Ej: 6-4)" size="15" id="final3" value="${fm_s3}">
+          </div>
+          <button class="btn-secondary" onclick="handleRecordFinal()"><i class="fas fa-check"></i> Registrar Final</button></div>`;
+      }
+
+      if(thirdPlace){
+        const tp_s1 = thirdPlace.sets[0] ? `${thirdPlace.sets[0][0]}-${thirdPlace.sets[0][1]}` : '';
+        const tp_s2 = thirdPlace.sets[1] ? `${thirdPlace.sets[1][0]}-${thirdPlace.sets[1][1]}` : '';
+        const tp_s3 = thirdPlace.sets[2] ? `${thirdPlace.sets[2][0]}-${thirdPlace.sets[2][1]}` : '';
+        
+        const pairA = formatPairDisplay(thirdPlace.a);
+        const pairB = formatPairDisplay(thirdPlace.b);
+        const winnerDisplay = thirdPlace.winner === thirdPlace.a.id ? pairA : pairB;
+        
+        container.innerHTML += `<div class="knockout-match ${thirdPlace.winner ? 'match-completed' : ''}"><h4><i class="fas fa-medal"></i> 3er Puesto</h4>
+          <b>${pairA} vs ${pairB}</b>
+          ${thirdPlace.winner ? `<p class="winner-label"><i class="fas fa-medal"></i> 3º Puesto: ${winnerDisplay}</p>` : ''}
+          <div class="set-inputs">
+            <input placeholder="Set 1 (Ej: 6-4)" size="15" id="third1" value="${tp_s1}">
+            <input placeholder="Set 2 (Ej: 6-4)" size="15" id="third2" value="${tp_s2}">
+            <input placeholder="Set 3 (Ej: 6-4)" size="15" id="third3" value="${tp_s3}">
+          </div>
+          <button class="btn-secondary" onclick="handleRecordThird()"><i class="fas fa-check"></i> Registrar 3er Puesto</button></div>`;
+      }
+    }
+
+    function handleRecordFinal(){
+      const s1 = parseSet(document.getElementById('final1').value);
+      const s2 = parseSet(document.getElementById('final2').value);
+      const s3 = parseSet(document.getElementById('final3').value);
+      recordFinalResult(s1,s2,s3);
+      alert('Resultado final registrado');
+      handleGenerateFinals(); 
+    }
+
+    function handleRecordThird(){
+      const s1 = parseSet(document.getElementById('third1').value);
+      const s2 = parseSet(document.getElementById('third2').value);
+      const s3 = parseSet(document.getElementById('third3').value);
+      recordThirdPlaceResult(s1,s2,s3);
+      alert('Resultado de 3er puesto registrado');
+      handleGenerateFinals(); 
+    }
+  </script>
+
+</body>
+</html>
