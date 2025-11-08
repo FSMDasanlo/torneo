@@ -107,6 +107,24 @@ input:focus, select:focus {
   transform: translateY(-2px);
 }
 
+.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+/* --- Estilos de Secciones --- */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
 /* --- Estilos de gestión de Parejas y Límite --- */
 
 .input-limit {
@@ -231,11 +249,66 @@ input:focus, select:focus {
     padding-top: 5px;
 }
 
+.winner-icon {
+    color: #fbc02d; /* Color dorado para el trofeo/medalla */
+    margin-left: 8px;
+}
+
 /* Asegurar que las cajas se vean bien dentro de la etiqueta bold en resultados */
 .result-form-item b .pair-box {
     font-weight: 700;
 }
 
+/* --- Nueva tabla de resultados --- */
+.result-form-item {
+    display: inline-block; /* Para que no ocupe el 100% */
+    width: auto; /* Ancho basado en contenido */
+    max-width: 100%; /* Evita desbordamiento en móviles */
+}
+
+.result-table {
+    width: auto; /* Ancho basado en contenido */
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.result-table th, .result-table td {
+    border: 1px solid #e0e0e0;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.result-table th {
+    background-color: #f4f6f8;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.result-table td:first-child {
+    text-align: left;
+    min-width: 250px; /* Espacio mínimo para nombres */
+}
+
+.set-input {
+    width: 45px; /* Columnas de set más estrechas */
+    text-align: center;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* --- Estilos para Notificaciones --- */
+.notification {
+    background-color: #34495e;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    margin-top: 10px;
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
 
 /* --- Tablas de Clasificación --- */
 .standings-table {
@@ -266,6 +339,11 @@ input:focus, select:focus {
 
 .standings-table tr:hover {
   background-color: #eff3f7;
+}
+
+/* Fila destacada para los clasificados */
+.standings-table tr.qualified-row {
+    background-color: #e6f7e0; /* Verde muy claro */
 }
 
 /* Redondeo de esquinas para la tabla */
