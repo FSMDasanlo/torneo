@@ -1,710 +1,157 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Torneo de Padel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selector de Torneos de Padel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilos adicionales para esta página de selección */
+        .tournament-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .tournament-list-item:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+        }
+        .tournament-list-item .actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .tournament-name {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .tournament-date {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .btn-delete-small {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container">
+<div class="container">
     <header>
-      <h1><i class="fas fa-tennis-ball"></i> Torneo de Padel</h1>
+        <h1><i class="fas fa-trophy"></i> Mis Torneos de Padel</h1>
     </header>
 
-    <div class="tab-navigation card">
-      <button class="tab-button active" onclick="openTab(event, 'tab-parejas')">
-        <i class="fas fa-users"></i> Parejas
-      </button>
-      <button class="tab-button" onclick="openTab(event, 'tab-grupos')">
-        <i class="fas fa-calendar-alt"></i> Partidos y Resultados
-      </button>
-      <button class="tab-button" onclick="openTab(event, 'tab-clasificacion')">
-        <i class="fas fa-trophy"></i> Clasificación
-      </button>
-      <button class="tab-button" onclick="openTab(event, 'tab-finales')">
-        <i class="fas fa-medal"></i> Eliminatorias
-      </button>
-      <button class="tab-button" onclick="openTab(event, 'tab-galeria')">
-        <i class="fas fa-images"></i> Galería
-      </button>
-    </div>
-    <div id="tab-parejas" class="tab-content card" style="display: block;">
-      <div class="section-header">
-        <h2><i class="fas fa-user-plus"></i> Añadir pareja</h2>
-        <button class="btn-danger" onclick="handleResetTournament()"><i class="fas fa-trash-alt"></i> Reiniciar Torneo</button>
-      </div>
-
-      <div class="input-limit">
-          <label for="limitInput">Límite de parejas por grupo:</label>
-          <input type="number" id="limitInput" value="4" min="2" onchange="handleUpdateLimit()">
-      </div>
-
-      <div class="input-group" style="margin-top: 15px;">
-        <select id="groupSelect">
-          <option value="1">Grupo 1</option>
-          <option value="2">Grupo 2</option>
-        </select>
-        <input type="text" id="player1" placeholder="Jugador 1">
-        <input type="text" id="player2" placeholder="Jugador 2">
-        <button class="btn-primary" onclick="handleAddPair()"><i class="fas fa-plus"></i> Añadir</button>
-      </div>
-      <div id="currentPairs" class="match-list" style="margin-top: 20px;"></div> 
-    </div>
-
-    <div id="tab-grupos" class="tab-content">
-      <div class="section card">
-        <h2>
-            <i class="fas fa-table-tennis"></i> Partidos de fase de grupos
-            <button id="toggleMatchesBtn" class="btn-icon" onclick="toggleMatchesList()" style="margin-left: 10px; font-size: 1em; display: none;">
-                <i class="fas fa-eye-slash"></i>
-            </button>
-        </h2>
-        <button class="btn-primary" onclick="handleGenerateGroupMatches()"><i class="fas fa-cogs"></i> Generar partidos</button>
-        <div id="matchesList" class="match-list"></div>
-      </div>
-      <div class="section card">
-        <div class="section-header">
-          <h2><i class="fas fa-clipboard-check"></i> Registrar resultados</h2>
-          <button class="btn-secondary" onclick="handleClearGroupResults()"><i class="fas fa-eraser"></i> Limpiar Resultados</button>
+    <div class="card">
+        <h2>Crear Nuevo Torneo</h2>
+        <div class="input-group">
+            <input type="text" id="newTournamentName" placeholder="Nombre del nuevo torneo (ej. Torneo de Verano 2024)">
+            <button class="btn-primary" onclick="createNewTournament()"><i class="fas fa-plus"></i> Crear y Abrir</button>
         </div>
-        <div id="resultForms" class="result-forms-list"></div>
-      </div>
     </div>
 
-    <div id="tab-clasificacion" class="tab-content card">
-      <h2><i class="fas fa-sort-amount-down"></i> Clasificación de Grupos</h2>
-      <div id="standings" class="standings-view" style="margin-top: 15px;"></div>
-    </div>
-
-    <div id="tab-finales" class="tab-content">
-      <div class="section card">
-        <h2><i class="fas fa-chevron-circle-right"></i> Semifinales</h2>
-        <button class="btn-primary" onclick="handleGenerateSemifinals()"><i class="fas fa-cogs"></i> Crear semifinales</button>
-        <div id="semis" class="semis-view"></div>
-      </div>
-      <div class="section card">
-        <h2><i class="fas fa-medal"></i> Final y 3er puesto</h2>
-        <button class="btn-primary" onclick="handleGenerateFinals()"><i class="fas fa-cogs"></i> Generar final y 3er puesto</button>
-        <div id="finals" class="finals-view"></div>
-      </div>
-    </div>
-
-    <div id="tab-galeria" class="tab-content card">
-      <h2><i class="fas fa-images"></i> Galería del Torneo</h2>
-      <div class="carousel-container">
-        <div class="carousel-slide">
-          <!-- Las imágenes se cargarán aquí dinámicamente -->
+    <div class="card">
+        <h2>Seleccionar Torneo Existente</h2>
+        <div id="tournamentsList">
+            <p>Cargando torneos...</p>
         </div>
-        <button class="carousel-button prev" onclick="moveSlide(-1)">&#10094;</button>
-        <button class="carousel-button next" onclick="moveSlide(1)">&#10095;</button>
-      </div>
     </div>
+</div>
 
-    <!-- Contenedor para notificaciones -->
-    <div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
-        <!-- Las notificaciones se añadirán aquí -->
-    </div>
+<!-- Scripts de Firebase (igual que en el otro archivo) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+    // Tu configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKYu9icthWhs5kEp0NFHxxcCGBwknAhVA",
+      authDomain: "torneospadel.firebaseapp.com",
+      projectId: "torneospadel",
+      storageBucket: "torneospadel.firebasestorage.app",
+      messagingSenderId: "962820410331",
+      appId: "1:962820410331:web:a4e658fda5afee8d6cf5fe"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  </div> <script src="app.js"></script>
-  <script>
-    // --- Lógica de formato para las parejas (ACTUALIZADA) ---
-    function formatPairDisplay(pair) {
-        const separator = ' - '; 
-        const pairName = pair.players.join(separator);
-        // Usa el color asignado a la pareja (pair.color)
-        return `<span class="pair-box" style="background-color: ${pair.color}; border: 1px solid ${pair.color.replace('C', 'B').replace('F', 'E')};">${pairName}</span>`;
-    }
-    
-    // --- Lógica de Pestañas ---
-    function openTab(evt, tabId) {
-      var tabContents = document.getElementsByClassName("tab-content");
-      for (var i = 0; i < tabContents.length; i++) {
-        tabContents[i].style.display = "none";
-      }
-
-      var tabButtons = document.getElementsByClassName("tab-button");
-      for (var i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-      }
-
-      document.getElementById(tabId).style.display = "block";
-      evt.currentTarget.className += " active";
-      
-      // Asegurar que los datos se rendericen al cambiar de pestaña
-      if (tabId === 'tab-parejas') renderCurrentPairs();
-      if (tabId === 'tab-grupos') {
-          if (matches.length > 0) {
-              handleGenerateGroupMatches(); 
-          }
-      }
-      if (tabId === 'tab-finales') {
-          if (semifinals.length > 0) {
-              handleGenerateSemifinals(); 
-          }
-          if (finalMatch || thirdPlace) {
-              handleGenerateFinals();
-          }
-      }
-      if (tabId === 'tab-clasificacion') {
-          handleShowStandings();
-      }
-      if (tabId === 'tab-galeria') {
-          initGallery();
-      }
-    }
-    
-    // Inicialización al cargar la página
-    document.addEventListener('DOMContentLoaded', () => {
-        // Se asume que loadFromLocalStorage() se llama al final de app.js
-        
-        // Abre la pestaña de Parejas al inicio
-        document.getElementById('tab-parejas').style.display = "block";
-        
-        // Renderizado inicial
-        renderCurrentPairs();
-        // Inicializa el input de límite con el valor cargado de localStorage (o 4 por defecto)
-        document.getElementById('limitInput').value = groupLimit; 
-    });
-
-    // --- Lógica para añadir pareja con la tecla Enter ---
-    function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault(); // Evita que el formulario se envíe (si lo hubiera)
-            handleAddPair();
+    // Lógica para esta página
+    async function createNewTournament() {
+        const nameInput = document.getElementById('newTournamentName');
+        const tournamentName = nameInput.value.trim();
+        if (!tournamentName) {
+            alert('Por favor, introduce un nombre para el torneo.');
+            return;
         }
-    }
-
-    document.getElementById('player1').addEventListener('keydown', handleKeyPress);
-    document.getElementById('player2').addEventListener('keydown', handleKeyPress);
-    
-    // --- Funciones de Parejas (Gestión de UI) ---
-
-    function handleUpdateLimit(){
-        const newLimit = parseInt(document.getElementById('limitInput').value);
-        if (newLimit >= 2) {
-            updateGroupLimit(newLimit); // Llama a la lógica de app.js (guarda en localStorage)
-            renderCurrentPairs(); // Redibuja para que se actualice el mensaje de límite
-        } else {
-            alert('El límite debe ser al menos 2.');
-            document.getElementById('limitInput').value = groupLimit; // Vuelve al valor anterior
-        }
-    }
-
-    function handleResetTournament() {
-        if (confirm('¿Estás seguro de que quieres reiniciar el torneo? Se borrarán TODOS los datos (parejas, partidos, resultados) y no se podrá deshacer.')) {
-            resetTournament(); // Lógica en app.js
-            location.reload(); // Recarga la página para un estado limpio
-        }
-    }
-
-    function handleClearGroupResults() {
-        if (confirm('¿Estás seguro de que quieres borrar todos los resultados de la fase de grupos? Los enfrentamientos se mantendrán.')) {
-            clearGroupResults(); // Lógica en app.js
-            renderResultForms(); // Vuelve a dibujar los formularios de resultados, ahora vacíos
-        }
-    }
-
-    // Renderiza el listado de parejas actual (usado por handleAddPair y openTab)
-    function renderCurrentPairs(){
-      const container = document.getElementById('currentPairs');
-      container.innerHTML = '<h4>Parejas Registradas:</h4>';
-
-      // Actualizar estado del select de grupos
-      const groupSelect = document.getElementById('groupSelect');
-      const options = groupSelect.options;
-      for (const g of [1, 2]) {
-          const option = Array.from(options).find(opt => parseInt(opt.value) === g);
-          option.disabled = groups[g].length >= groupLimit;
-      }
-
-      for(const g of [1, 2]){
-        container.innerHTML += `<h5><i class="fas fa-users-cog"></i> Grupo ${g} (${groups[g].length}/${groupLimit} parejas)</h5>`;
-        
-        if (groups[g].length === groupLimit) {
-             container.innerHTML += `<p class="limit-reached">¡Límite de ${groupLimit} parejas alcanzado para el Grupo ${g}!</p>`;
-        }
-
-        groups[g].forEach(p => {
-            const pairNameDisplay = formatPairDisplay(p); // Usa la función de formato
-            container.innerHTML += `
-            <div class="match-item pair-item">
-                <span>${pairNameDisplay}</span>
-                <div class="pair-actions">
-                    <button class="btn-icon btn-edit" onclick="handleEditPair(${p.id}, ${g})"><i class="fas fa-edit"></i></button>
-                    <button class="btn-icon btn-delete" onclick="handleDeletePair(${p.id})"><i class="fas fa-trash-alt"></i></button>
-                </div>
-            </div>`;
+        // Crea un nuevo documento con un ID automático en la colección 'tournaments'
+        const newDocRef = await db.collection('tournaments').add({
+            name: tournamentName,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Guarda la fecha de creación
+            groups: { 1: [], 2: [] }, matches: [], semifinals: [], finalMatch: null, thirdPlace: null, groupLimit: 4, nextColorIndex: 0
         });
-      }
+        // Redirige al usuario a la página del torneo con el ID del nuevo documento
+        window.location.href = `torneo.html?id=${newDocRef.id}`;
     }
 
-    function handleAddPair(){
-      const group = parseInt(document.getElementById('groupSelect').value);
-      const p1 = document.getElementById('player1').value.trim();
-      const p2 = document.getElementById('player2').value.trim();
-      
-      if(p1 && p2){
-        if (groups[group].length >= groupLimit) {
-             alert(`ERROR: No se pueden añadir más de ${groupLimit} parejas al Grupo ${group}.`);
-             return;
-        }
-
-        addPair(group, p1, p2);
-        document.getElementById('player1').value = '';
-        document.getElementById('player2').value = '';
-        renderCurrentPairs(); 
-      }
+    function loadTournament(id) {
+        window.location.href = `torneo.html?id=${id}`;
     }
 
-    function handleDeletePair(pairId){
-        if(confirm('¿Estás seguro de que quieres eliminar esta pareja? Esto borrará cualquier resultado asociado.')){
-            deletePair(pairId); // Lógica en app.js
-            renderCurrentPairs();
+    async function deleteTournament(id, name) {
+        if (confirm(`¿Estás seguro de que quieres borrar el torneo "${name}"? Esta acción es permanente.`)) {
+            try {
+                await db.collection('tournaments').doc(id).delete();
+                console.log(`Torneo ${id} borrado.`);
+            } catch (error) {
+                console.error("Error al borrar el torneo: ", error);
+                alert("Hubo un error al intentar borrar el torneo.");
+            }
         }
     }
 
-    function handleEditPair(pairId, groupId){
-        const pair = groups[groupId].find(p => p.id === pairId);
-        if (!pair) return;
-
-        const newP1 = prompt(`Editar Jugador 1 de la pareja ${pair.players.join(' - ')}:`, pair.players[0]);
-        if (newP1 === null) return; 
-
-        const newP2 = prompt(`Editar Jugador 2 de la pareja ${pair.players.join(' - ')}:`, pair.players[1]);
-        if (newP2 === null) return;
-
-        if (newP1.trim() && newP2.trim()){
-            editPair(pairId, newP1.trim(), newP2.trim()); // Lógica en app.js
-            renderCurrentPairs();
-        } else {
-            alert('Ambos nombres de jugador son obligatorios.');
-        }
-    }
-
-    // --- Funciones de Partidos ---
-
-    function handleGenerateGroupMatches(){
-      generateGroupMatches();
-      const container = document.getElementById('matchesList');
-      container.innerHTML = '';
-      const toggleBtn = document.getElementById('toggleMatchesBtn');
-
-      if (matches.length > 0) {
-          matches.forEach(m => {
-            const pairA = formatPairDisplay(m.a); // Usar m.a (objeto pareja)
-            const pairB = formatPairDisplay(m.b); // Usar m.b (objeto pareja)
-            container.innerHTML += `<div class="match-item"><span class="match-group">Grupo ${m.group}:</span> ${pairA} <span class="vs">vs</span> ${pairB}</div>`; 
-          });
-          toggleBtn.style.display = 'inline-block'; // Mostrar el botón
-          container.style.display = 'block'; // Asegurarse de que la lista es visible
-          const icon = toggleBtn.querySelector('i');
-          icon.classList.remove('fa-eye');
-          icon.classList.add('fa-eye-slash');
-      } else {
-          toggleBtn.style.display = 'none'; // Ocultar si no hay partidos
-      }
-
-      renderResultForms();
-    }
-
-    function toggleMatchesList() {
-        const matchesList = document.getElementById('matchesList');
-        matchesList.style.display = matchesList.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function renderResultForms(){
-      const container = document.getElementById('resultForms');
-      container.innerHTML = '';
-
-      [1, 2].forEach(groupNum => {
-        const groupMatches = matches.filter(m => m.group === groupNum);
-        if (groupMatches.length > 0) {
-            container.innerHTML += `<h4><i class="fas fa-users-cog"></i> Grupo ${groupNum}</h4>`;
-            groupMatches.forEach(m => {
-                const id = m.id;
-                
-                // Valores para los sets de cada pareja
-                const s1_a = m.sets[0] ? m.sets[0][0] : '';
-                const s1_b = m.sets[0] ? m.sets[0][1] : '';
-                const s2_a = m.sets[1] ? m.sets[1][0] : '';
-                const s2_b = m.sets[1] ? m.sets[1][1] : '';
-                const s3_a = m.sets[2] ? m.sets[2][0] : '';
-                const s3_b = m.sets[2] ? m.sets[2][1] : '';
-                const s4_a = m.sets[3] ? m.sets[3][0] : '';
-                const s4_b = m.sets[3] ? m.sets[3][1] : '';
-                const s5_a = m.sets[4] ? m.sets[4][0] : '';
-                const s5_b = m.sets[4] ? m.sets[4][1] : '';
-                
-                container.innerHTML += `
-                    <div class="result-form-item">
-                        <table class="result-table">
-                            <thead>
-                                <tr>
-                                    <th>Pareja</th>
-                                    <th>Set 1</th>
-                                    <th>Set 2</th>
-                                    <th>Set 3</th>
-                                    <th>Set 4</th>
-                                    <th>Set 5</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>${formatPairDisplay(m.a)}</td>
-                                    <td><input type="number" min="0" id="s1-a-${id}" value="${s1_a}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s2-a-${id}" value="${s2_a}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s3-a-${id}" value="${s3_a}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s4-a-${id}" value="${s4_a}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s5-a-${id}" value="${s5_a}" class="set-input"></td>
-                                    <td rowspan="2">
-                                        <button class="btn-secondary" onclick="handleRecordResult(${id})"><i class="fas fa-check"></i> Registrar</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>${formatPairDisplay(m.b)}</td>
-                                    <td><input type="number" min="0" id="s1-b-${id}" value="${s1_b}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s2-b-${id}" value="${s2_b}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s3-b-${id}" value="${s3_b}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s4-b-${id}" value="${s4_b}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s5-b-${id}" value="${s5_b}" class="set-input"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+    // Cargar y mostrar la lista de torneos al cargar la página
+    window.onload = () => {
+        const listContainer = document.getElementById('tournamentsList');
+        db.collection('tournaments').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            if (snapshot.empty) {
+                listContainer.innerHTML = '<p>No hay torneos creados. ¡Crea el primero!</p>';
+                return;
+            }
+            listContainer.innerHTML = '';
+            snapshot.forEach(doc => {
+                const tournament = doc.data();
+                const tournamentName = tournament.name || 'Torneo sin nombre';
+                const date = tournament.createdAt ? new Date(tournament.createdAt.seconds * 1000).toLocaleDateString() : 'Sin fecha';
+                listContainer.innerHTML += `
+                    <div class="tournament-list-item">
+                        <div onclick="loadTournament('${doc.id}')" style="flex-grow: 1;">
+                            <div class="tournament-name">${tournamentName}</div>
+                            <div class="tournament-date">Creado el: ${date}</div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-delete-small" onclick="event.stopPropagation(); deleteTournament('${doc.id}', '${tournamentName.replace(/'/g, "\\'")}')" title="Borrar torneo">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
                     </div>
                 `;
             });
-        }
-      });
-    }
-
-    function handleRecordResult(id){
-      const s1_a = document.getElementById(`s1-a-${id}`).value;
-      const s1_b = document.getElementById(`s1-b-${id}`).value;
-      const s2_a = document.getElementById(`s2-a-${id}`).value;
-      const s2_b = document.getElementById(`s2-b-${id}`).value;
-      const s3_a = document.getElementById(`s3-a-${id}`).value;
-      const s3_b = document.getElementById(`s3-b-${id}`).value;
-      const s4_a = document.getElementById(`s4-a-${id}`).value;
-      const s4_b = document.getElementById(`s4-b-${id}`).value;
-      const s5_a = document.getElementById(`s5-a-${id}`).value;
-      const s5_b = document.getElementById(`s5-b-${id}`).value;
-
-      const s1 = (s1_a !== '' && s1_b !== '') ? [parseInt(s1_a), parseInt(s1_b)] : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? [parseInt(s2_a), parseInt(s2_b)] : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? [parseInt(s3_a), parseInt(s3_b)] : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? [parseInt(s4_a), parseInt(s4_b)] : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? [parseInt(s5_a), parseInt(s5_b)] : null;
-
-      recordResult(id, s1, s2, s3, s4, s5);
-      showNotification('Resultado registrado correctamente.');
-    }
-
-    function parseSet(str){
-      if(!str) return null;
-      const nums = str.split('-').map(n => parseInt(n.trim()));
-      return nums.length===2 ? nums : null;
-    }
-    
-    function showNotification(message) {
-        const container = document.getElementById('notification-container');
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.textContent = message;
-        
-        container.appendChild(notification);
-        
-        // La notificación se muestra y luego se desvanece
-        setTimeout(() => {
-            notification.remove();
-        }, 3000); // La notificación dura 3 segundos
-    }
-
-    function handleShowStandings(){
-      const st = computeStandings();
-      const container = document.getElementById('standings');
-      let html = '';
-      for(const g of [1,2]){
-        html += `<h3><i class="fas fa-list-ol"></i> Grupo ${g}</h3>`;
-        html += `<table class="standings-table">
-                    <thead>
-                        <tr>
-                            <th>Pos</th>
-                            <th>Pareja</th>
-                            <th>Puntos</th>
-                            <th>Sets Ganados</th>
-                            <th>Juegos Ganados</th>
-                        </tr>
-                    </thead>
-                    <tbody>`; 
-        st[g].forEach((r, index) => {
-            const pairNameDisplay = formatPairDisplay(r.pair);
-            const rowClass = index < 2 ? 'class="qualified-row"' : ''; // Clase para los 2 primeros
-            html += `<tr ${rowClass}><td>${index + 1}</td><td>${pairNameDisplay}</td><td>${r.puntos}</td><td>${r.sets}</td><td>${r.juegos}</td></tr>`;
+        }, error => {
+            console.error("Error al cargar la lista de torneos:", error);
+            listContainer.innerHTML = '<p style="color: red;"><b>Error al cargar torneos.</b> Es posible que las reglas de seguridad de Firebase hayan expirado. Por favor, revisa la consola de Firebase.</p>';
         });
-        html += `</tbody></table>`;
-      }
-      container.innerHTML = html;
-    }
-
-    function handleGenerateSemifinals(){
-      generateSemifinals();
-      const container = document.getElementById('semis');
-      container.innerHTML = '';
-      semifinals.forEach((s, index) => {
-        const id = s.id;
-
-        const s1_a = s.sets[0] ? s.sets[0][0] : ''; const s1_b = s.sets[0] ? s.sets[0][1] : '';
-        const s2_a = s.sets[1] ? s.sets[1][0] : ''; const s2_b = s.sets[1] ? s.sets[1][1] : '';
-        const s3_a = s.sets[2] ? s.sets[2][0] : ''; const s3_b = s.sets[2] ? s.sets[2][1] : '';
-        const s4_a = s.sets[3] ? s.sets[3][0] : ''; const s4_b = s.sets[3] ? s.sets[3][1] : '';
-        const s5_a = s.sets[4] ? s.sets[4][0] : ''; const s5_b = s.sets[4] ? s.sets[4][1] : '';
-
-        const winnerIconA = s.winner === s.a.id ? ' <i class="fas fa-trophy winner-icon"></i>' : '';
-        const winnerIconB = s.winner === s.b.id ? ' <i class="fas fa-trophy winner-icon"></i>' : '';
-
-        container.innerHTML += `
-            <div class="result-form-item knockout-match ${s.winner ? 'match-completed' : ''}">
-                <table class="result-table">
-                    <thead>
-                        <tr>
-                            <th>Semifinal ${index + 1}</th>
-                            <th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>${formatPairDisplay(s.a)}${winnerIconA}</td>
-                            <td><input type="number" min="0" id="semi-s1-a-${id}" value="${s1_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s2-a-${id}" value="${s2_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s3-a-${id}" value="${s3_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s4-a-${id}" value="${s4_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s5-a-${id}" value="${s5_a}" class="set-input"></td>
-                            <td rowspan="2">
-                                <button class="btn-secondary" onclick="handleRecordSemi(${id})"><i class="fas fa-check"></i> Registrar</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>${formatPairDisplay(s.b)}${winnerIconB}</td>
-                            <td><input type="number" min="0" id="semi-s1-b-${id}" value="${s1_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s2-b-${id}" value="${s2_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s3-b-${id}" value="${s3_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s4-b-${id}" value="${s4_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s5-b-${id}" value="${s5_b}" class="set-input"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `;
-      });
-    }
-
-    function handleRecordSemi(id){
-      const s1_a = document.getElementById(`semi-s1-a-${id}`).value; const s1_b = document.getElementById(`semi-s1-b-${id}`).value;
-      const s2_a = document.getElementById(`semi-s2-a-${id}`).value; const s2_b = document.getElementById(`semi-s2-b-${id}`).value;
-      const s3_a = document.getElementById(`semi-s3-a-${id}`).value; const s3_b = document.getElementById(`semi-s3-b-${id}`).value;
-      const s4_a = document.getElementById(`semi-s4-a-${id}`).value; const s4_b = document.getElementById(`semi-s4-b-${id}`).value;
-      const s5_a = document.getElementById(`semi-s5-a-${id}`).value; const s5_b = document.getElementById(`semi-s5-b-${id}`).value;
-
-      const s1 = (s1_a !== '' && s1_b !== '') ? [parseInt(s1_a), parseInt(s1_b)] : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? [parseInt(s2_a), parseInt(s2_b)] : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? [parseInt(s3_a), parseInt(s3_b)] : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? [parseInt(s4_a), parseInt(s4_b)] : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? [parseInt(s5_a), parseInt(s5_b)] : null;
-
-      recordSemiResult(id, s1, s2, s3, s4, s5);
-      showNotification('Resultado de semifinal registrado.');
-      handleGenerateSemifinals(); 
-    }
-
-    function handleGenerateFinals(){
-      generateFinals();
-      const container = document.getElementById('finals');
-      container.innerHTML = '';
-
-      if(finalMatch){
-        const s1_a = finalMatch.sets[0] ? finalMatch.sets[0][0] : ''; const s1_b = finalMatch.sets[0] ? finalMatch.sets[0][1] : '';
-        const s2_a = finalMatch.sets[1] ? finalMatch.sets[1][0] : ''; const s2_b = finalMatch.sets[1] ? finalMatch.sets[1][1] : '';
-        const s3_a = finalMatch.sets[2] ? finalMatch.sets[2][0] : ''; const s3_b = finalMatch.sets[2] ? finalMatch.sets[2][1] : '';
-        const s4_a = finalMatch.sets[3] ? finalMatch.sets[3][0] : ''; const s4_b = finalMatch.sets[3] ? finalMatch.sets[3][1] : '';
-        const s5_a = finalMatch.sets[4] ? finalMatch.sets[4][0] : ''; const s5_b = finalMatch.sets[4] ? finalMatch.sets[4][1] : '';
-        const winnerIconA = finalMatch.winner === finalMatch.a.id ? ' <i class="fas fa-crown winner-icon"></i>' : '';
-        const winnerIconB = finalMatch.winner === finalMatch.b.id ? ' <i class="fas fa-crown winner-icon"></i>' : '';
-
-        container.innerHTML += `<div class="result-form-item knockout-match ${finalMatch.winner ? 'match-completed' : ''}"><h4><i class="fas fa-crown"></i> Final</h4>
-          <table class="result-table">
-              <thead><tr><th>FINAL</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th><th></th></tr></thead>
-              <tbody>
-                  <tr>
-                      <td>${formatPairDisplay(finalMatch.a)}${winnerIconA}</td>
-                      <td><input type="number" min="0" id="final-s1-a" value="${s1_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s2-a" value="${s2_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s3-a" value="${s3_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s4-a" value="${s4_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s5-a" value="${s5_a}" class="set-input"></td>
-                      <td rowspan="2"><button class="btn-secondary" onclick="handleRecordFinal()"><i class="fas fa-check"></i> Registrar</button></td>
-                  </tr>
-                  <tr>
-                      <td>${formatPairDisplay(finalMatch.b)}${winnerIconB}</td>
-                      <td><input type="number" min="0" id="final-s1-b" value="${s1_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s2-b" value="${s2_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s3-b" value="${s3_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s4-b" value="${s4_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s5-b" value="${s5_b}" class="set-input"></td>
-                  </tr>
-              </tbody>
-          </table></div>`;
-      }
-
-      if(thirdPlace){
-        const s1_a = thirdPlace.sets[0] ? thirdPlace.sets[0][0] : ''; const s1_b = thirdPlace.sets[0] ? thirdPlace.sets[0][1] : '';
-        const s2_a = thirdPlace.sets[1] ? thirdPlace.sets[1][0] : ''; const s2_b = thirdPlace.sets[1] ? thirdPlace.sets[1][1] : '';
-        const s3_a = thirdPlace.sets[2] ? thirdPlace.sets[2][0] : ''; const s3_b = thirdPlace.sets[2] ? thirdPlace.sets[2][1] : '';
-        const s4_a = thirdPlace.sets[3] ? thirdPlace.sets[3][0] : ''; const s4_b = thirdPlace.sets[3] ? thirdPlace.sets[3][1] : '';
-        const s5_a = thirdPlace.sets[4] ? thirdPlace.sets[4][0] : ''; const s5_b = thirdPlace.sets[4] ? thirdPlace.sets[4][1] : '';
-        const winnerIconA = thirdPlace.winner === thirdPlace.a.id ? ' <i class="fas fa-medal winner-icon"></i>' : '';
-        const winnerIconB = thirdPlace.winner === thirdPlace.b.id ? ' <i class="fas fa-medal winner-icon"></i>' : '';
-
-        container.innerHTML += `<div class="result-form-item knockout-match ${thirdPlace.winner ? 'match-completed' : ''}"><h4><i class="fas fa-medal"></i> 3er Puesto</h4>
-          <table class="result-table">
-              <thead><tr><th>Tercer y Cuarto puesto</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th><th></th></tr></thead>
-              <tbody>
-                  <tr>
-                      <td>${formatPairDisplay(thirdPlace.a)}${winnerIconA}</td>
-                      <td><input type="number" min="0" id="third-s1-a" value="${s1_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s2-a" value="${s2_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s3-a" value="${s3_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s4-a" value="${s4_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s5-a" value="${s5_a}" class="set-input"></td>
-                      <td rowspan="2"><button class="btn-secondary" onclick="handleRecordThird()"><i class="fas fa-check"></i> Registrar</button></td>
-                  </tr>
-                  <tr>
-                      <td>${formatPairDisplay(thirdPlace.b)}${winnerIconB}</td>
-                      <td><input type="number" min="0" id="third-s1-b" value="${s1_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s2-b" value="${s2_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s3-b" value="${s3_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s4-b" value="${s4_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s5-b" value="${s5_b}" class="set-input"></td>
-                  </tr>
-              </tbody>
-          </table></div>`;
-      }
-    }
-
-    function handleRecordFinal(){
-      const s1_a = document.getElementById(`final-s1-a`).value; const s1_b = document.getElementById(`final-s1-b`).value;
-      const s2_a = document.getElementById(`final-s2-a`).value; const s2_b = document.getElementById(`final-s2-b`).value;
-      const s3_a = document.getElementById(`final-s3-a`).value; const s3_b = document.getElementById(`final-s3-b`).value;
-      const s4_a = document.getElementById(`final-s4-a`).value; const s4_b = document.getElementById(`final-s4-b`).value;
-      const s5_a = document.getElementById(`final-s5-a`).value; const s5_b = document.getElementById(`final-s5-b`).value;
-
-      const s1 = (s1_a !== '' && s1_b !== '') ? [parseInt(s1_a), parseInt(s1_b)] : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? [parseInt(s2_a), parseInt(s2_b)] : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? [parseInt(s3_a), parseInt(s3_b)] : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? [parseInt(s4_a), parseInt(s4_b)] : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? [parseInt(s5_a), parseInt(s5_b)] : null;
-
-      recordFinalResult(s1,s2,s3,s4,s5);
-      showNotification('Resultado final registrado.');
-      handleGenerateFinals(); 
-    }
-
-    function handleRecordThird(){
-      const s1_a = document.getElementById(`third-s1-a`).value; const s1_b = document.getElementById(`third-s1-b`).value;
-      const s2_a = document.getElementById(`third-s2-a`).value; const s2_b = document.getElementById(`third-s2-b`).value;
-      const s3_a = document.getElementById(`third-s3-a`).value; const s3_b = document.getElementById(`third-s3-b`).value;
-      const s4_a = document.getElementById(`third-s4-a`).value; const s4_b = document.getElementById(`third-s4-b`).value;
-      const s5_a = document.getElementById(`third-s5-a`).value; const s5_b = document.getElementById(`third-s5-b`).value;
-
-      const s1 = (s1_a !== '' && s1_b !== '') ? [parseInt(s1_a), parseInt(s1_b)] : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? [parseInt(s2_a), parseInt(s2_b)] : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? [parseInt(s3_a), parseInt(s3_b)] : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? [parseInt(s4_a), parseInt(s4_b)] : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? [parseInt(s5_a), parseInt(s5_b)] : null;
-
-      recordThirdPlaceResult(s1,s2,s3,s4,s5);
-      showNotification('Resultado de 3er puesto registrado.');
-      handleGenerateFinals(); 
-    }
-
-    // --- Lógica de la Galería ---
-    let slideIndex = 0;
-    let imageFiles = []; // La lista se generará dinámicamente
-    let galleryInitialized = false; // Para evitar recargar las imágenes cada vez
-
-    // Función para comprobar si una imagen existe
-    function checkImage(url) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve(true);  // La imagen existe y se cargó
-            img.onerror = () => resolve(false); // La imagen no existe o hay un error
-            img.src = url;
-        });
-    }
-
-    async function initGallery() {
-        const slideContainer = document.querySelector('.carousel-slide');
-        if (!slideContainer) return;
-
-        // Si la galería ya se inicializó, no hacemos nada más
-        if (galleryInitialized) {
-            showSlide(slideIndex);
-            return;
-        }
-
-        slideContainer.innerHTML = '<p>Cargando galería...</p>';
-        imageFiles = []; // Reseteamos la lista
-
-        for (let i = 1; ; i++) {
-            const imageUrl = `img/img${i}.jpg`;
-            const exists = await checkImage(imageUrl);
-            if (exists) {
-                imageFiles.push(imageUrl); // Añadimos la URL completa
-            } else {
-                break; // Detenemos el bucle cuando una imagen no se encuentra
-            }
-        }
-
-        galleryInitialized = true; // Marcamos como inicializada
-
-        if (imageFiles.length > 0) {
-            slideContainer.innerHTML = imageFiles.map(url => `<img src="${url}" alt="Foto del torneo ${imageFiles.indexOf(url) + 1}">`).join('');
-            showSlide(0); // Mostramos la primera imagen
-        } else {
-            slideContainer.innerHTML = '<p>No se encontraron imágenes para la galería.</p>';
-        }
-    }
-
-    function moveSlide(n) {
-        showSlide(slideIndex += n);
-    }
-
-    function showSlide(n) {
-        const slides = document.querySelectorAll('.carousel-slide img');
-        if (slides.length === 0) return;
-
-        if (n >= slides.length) {
-            slideIndex = 0;
-        }
-        if (n < 0) {
-            slideIndex = slides.length - 1;
-        }
-
-        // Ocultar todas las imágenes
-        for (let i = 0; i < slides.length; i++) {
-            slides[i].style.display = 'none';
-        }
-
-        // Mostrar solo la imagen actual
-        slides[slideIndex].style.display = 'block';
-    }
-
-  </script>
+    };
+</script>
 
 </body>
 </html>

@@ -1,6 +1,20 @@
 // Torneo de Padel - Lógica completa
 
-// Grupos y parejas
+// =======================================================
+// === CONFIGURACIÓN DINÁMICA DE FIREBASE ================
+// =======================================================
+const db = firebase.firestore();
+
+// Función para obtener el ID del torneo desde la URL (ej: torneo.html?id=XXXX)
+function getTournamentIdFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
+}
+
+const tournamentId = getTournamentIdFromURL();
+let tournamentDocRef; // La referencia ahora es variable
+let tournamentName = "Cargando..."; // Variable para el nombre del torneo
+
 let groups = { 1: [], 2: [] };
 let matches = [];
 let semifinals = [];
@@ -31,13 +45,13 @@ function getNextColor() {
 }
 
 // =======================================================
-// === FUNCIONES DE PERSISTENCIA (localStorage) ==========
+// === FUNCIONES DE PERSISTENCIA (Firestore) ============
 // =======================================================
 
-// Guardar todos los datos del torneo en el almacenamiento local
-function saveToLocalStorage() {
-  // Incluimos nextColorIndex en el guardado
-  const data = JSON.stringify({
+// Guarda todos los datos del torneo en Firestore
+async function saveTournamentData() {
+  const dataToSave = {
+    name: tournamentName, // ¡LA LÍNEA CLAVE QUE FALTABA!
     groups,
     matches,
     semifinals,
@@ -45,50 +59,66 @@ function saveToLocalStorage() {
     thirdPlace,
     groupLimit,
     nextColorIndex,
-  });
-  localStorage.setItem("padelTournamentData", data);
+  };
+  try {
+    // Usamos .update() en lugar de .set() para no borrar campos que no gestionamos aquí (como createdAt)
+    // Pero como la estructura es completa, .set con la opción { merge: true } es más seguro
+    // para asegurar que todos los campos se sincronicen.
+    await tournamentDocRef.set(dataToSave, { merge: true });
+    console.log("Datos del torneo guardados en Firestore.");
+  } catch (e) {
+    console.error("Error al guardar en Firestore: ", e);
+  }
 }
 
-// Cargar los datos del torneo desde el almacenamiento local
-function loadFromLocalStorage() {
-  const data = localStorage.getItem("padelTournamentData");
-  if (data) {
-    const saved = JSON.parse(data);
-    groups = saved.groups || { 1: [], 2: [] };
-    matches = saved.matches || [];
-    semifinals = saved.semifinals || [];
-    finalMatch = saved.finalMatch || null;
-    thirdPlace = saved.thirdPlace || null;
-    groupLimit = saved.groupLimit || 4;
-    nextColorIndex = saved.nextColorIndex || 0; // Cargamos el índice
-
-    // Lógica para asignar colores a parejas antiguas (si la propiedad no existía)
-    let assignedNewColors = false;
-    for (const g in groups) {
-      groups[g] = groups[g].map((p) => {
-        if (!p.color) {
-          // Asignamos un nuevo color usando el índice actual y actualizamos el índice.
-          p.color = getNextColor();
-          assignedNewColors = true;
-        }
-        return p;
-      });
-    }
-    // Si se asignaron nuevos colores, guardar para persistir.
-    if (assignedNewColors) {
-      // NO usamos saveToLocalStorage aquí para evitar un bucle si hay error, solo guardamos.
-      const updatedData = JSON.stringify({
-        groups,
-        matches,
-        semifinals,
-        finalMatch,
-        thirdPlace,
-        groupLimit,
-        nextColorIndex,
-      });
-      localStorage.setItem("padelTournamentData", updatedData);
-    }
+// Carga los datos y escucha cambios en tiempo real desde Firestore
+function loadTournamentData() {
+  if (!tournamentId) {
+    alert("Error: No se ha especificado un ID de torneo. Volviendo a la página de selección.");
+    window.location.href = 'index.html';
+    return;
   }
+  tournamentDocRef = db.collection("tournaments").doc(tournamentId);
+  tournamentDocRef.onSnapshot((docSnap) => {
+    if (docSnap.exists) {
+      const saved = docSnap.data();
+      groups = saved.groups || { 1: [], 2: [] };
+      matches = saved.matches || [];
+      semifinals = saved.semifinals || [];
+      finalMatch = saved.finalMatch || null;
+      thirdPlace = saved.thirdPlace || null;
+      groupLimit = saved.groupLimit || 4;
+      tournamentName = saved.name || "Torneo sin nombre"; // Cargar el nombre del torneo
+      nextColorIndex = saved.nextColorIndex || 0; 
+
+      console.log("Datos cargados/actualizados desde Firestore.");
+
+      // Una vez cargados los datos, actualizamos toda la interfaz.
+      if (document.getElementById('limitInput')) {
+        document.getElementById('limitInput').value = groupLimit;
+      }
+      // Llama a todas las funciones de renderizado para refrescar la vista
+      renderCurrentPairs();
+      updateTournamentHeader(tournamentName); // Actualizar el título del torneo
+      const activeTab = document.querySelector('.tab-button.active');
+      if (activeTab) {
+        if (activeTab.innerText.includes('Cuadro')) handleGenerateGroupMatches();
+        if (activeTab.innerText.includes('Clasificación')) handleShowStandings();
+        if (activeTab.innerText.includes('Eliminatorias')) {
+            handleGenerateSemifinals();
+            handleGenerateFinals();
+        }
+      }
+
+    } else {
+      // Esto puede pasar si el ID es incorrecto o el documento fue borrado.
+      console.error("El documento del torneo no existe. Redirigiendo...");
+      alert("Error: El torneo con este ID no fue encontrado.");
+      window.location.href = 'index.html';
+    }
+  }, (error) => {
+    console.error("Error al escuchar cambios de Firestore: ", error);
+  });
 }
 
 // =======================================================
@@ -98,22 +128,26 @@ function loadFromLocalStorage() {
 // Límite
 function updateGroupLimit(limit) {
   groupLimit = limit;
-  saveToLocalStorage();
+  saveTournamentData();
 }
 
 // =======================================================
 // === FUNCIONES DE GESTIÓN DEL TORNEO ===================
 // =======================================================
 
-// Reiniciar todo el torneo
-function resetTournament() {
-  localStorage.removeItem("padelTournamentData");
+// Reiniciar todo el torneo (ahora borra de Firestore)
+async function resetTournament() {
+  if (confirm("¿Seguro que quieres borrar ESTE TORNEO PERMANENTEMENTE? Esta acción no se puede deshacer.")) {
+    // Borra el documento de Firestore para empezar de cero.
+    await tournamentDocRef.delete();
+    // La redirección se manejará automáticamente por el listener onSnapshot
+  }
 }
 
 // Limpiar solo los resultados de la fase de grupos
 function clearGroupResults() {
   matches.forEach((m) => (m.sets = []));
-  saveToLocalStorage();
+  saveTournamentData();
 }
 // Añadir pareja
 function addPair(group, player1, player2) {
@@ -123,7 +157,7 @@ function addPair(group, player1, player2) {
     color: getNextColor(), // Asignar color único
   };
   groups[group].push(newPair);
-  saveToLocalStorage(); // GUARDADO
+  saveTournamentData();
 }
 
 // Eliminar pareja
@@ -149,7 +183,7 @@ function deletePair(pairId) {
     finalMatch = null;
     thirdPlace = null;
 
-    saveToLocalStorage(); // GUARDADO
+    saveTournamentData();
   }
 }
 
@@ -166,7 +200,7 @@ function editPair(pairId, newP1, newP2) {
         if (m.b.id === pairId) m.b.players = [newP1, newP2];
       });
 
-      saveToLocalStorage(); // GUARDADO
+      saveTournamentData();
       return;
     }
   }
@@ -194,7 +228,7 @@ function generateGroupMatches() {
         // Buscar el partido anterior para conservar sets
         const existing = oldMatches.find(
           (m) =>
-            m.group === g &&
+            m.group == g && // Usar == para comparación flexible de número y string si es necesario
             ((m.a === pair1Id && m.b === pair2Id) ||
               (m.a === pair2Id && m.b === pair1Id))
         );
@@ -209,14 +243,16 @@ function generateGroupMatches() {
       }
     }
   }
-  saveToLocalStorage(); // GUARDADO
+  saveTournamentData();
 }
 
 // Registrar resultado de fase de grupos
 function recordResult(matchId, set1, set2, set3, set4, set5) {
   const match = matches.find((m) => m.id === matchId);
-  match.sets = [set1, set2, set3, set4, set5].filter(Boolean);
-  saveToLocalStorage(); // GUARDADO
+  if (match) {
+    match.sets = [set1, set2, set3, set4, set5].filter(Boolean);
+    saveTournamentData();
+  }
 }
 
 // Función auxiliar para obtener sets/juegos de un partido
@@ -227,10 +263,12 @@ function getMatchResult(match) {
     gamesB = 0;
   let winner = null;
   for (const set of match.sets) {
-    gamesA += set[0];
-    gamesB += set[1];
-    if (set[0] > set[1]) setsA++;
-    else setsB++;
+    if (set && typeof set[0] === 'number' && typeof set[1] === 'number') {
+      gamesA += set[0];
+      gamesB += set[1];
+      if (set[0] > set[1]) setsA++;
+      else setsB++;
+    }
   }
   if (setsA > setsB) winner = match.a.id;
   if (setsB > setsA) winner = match.b.id;
@@ -244,6 +282,7 @@ function getMatchResult(match) {
 function computeStandings() {
   const standings = { 1: [], 2: [] };
   for (const g of [1, 2]) {
+    if (!groups[g]) continue;
     const base = groups[g].map((p) => ({
       pair: p,
       puntos: 0,
@@ -252,13 +291,15 @@ function computeStandings() {
     }));
 
     for (const match of matches.filter(
-      (m) => m.group === g && m.sets.length > 0
+      (m) => m.group == g && m.sets.length > 0
     )) {
       const result = getMatchResult(match);
       if (!result) continue;
 
       const idxA = base.findIndex((x) => x.pair.id === match.a.id);
       const idxB = base.findIndex((x) => x.pair.id === match.b.id);
+
+      if (idxA === -1 || idxB === -1) continue;
 
       // Puntos y sets
       if (result.winner === match.a.id) {
@@ -288,7 +329,11 @@ function generateSemifinals() {
   const g1 = st[1];
   const g2 = st[2];
 
-  if (g1.length < 2 || g2.length < 2) return;
+  if (!g1 || g1.length < 2 || !g2 || g2.length < 2) {
+    semifinals = []; // Limpia las semifinales si no se pueden generar
+    saveTournamentData();
+    return;
+  }
 
   // Guardar los datos de las semis si ya existen (para conservar resultados)
   const existingSemis = semifinals.map((s) => ({
@@ -328,7 +373,7 @@ function generateSemifinals() {
     }
   });
 
-  saveToLocalStorage(); // GUARDADO
+  saveTournamentData();
 }
 
 // Función auxiliar para calcular el ganador en eliminatorias (Semis/Finales)
@@ -336,8 +381,10 @@ function calculateKnockoutWinner(match) {
   let winsA = 0,
     winsB = 0;
   for (const set of match.sets) {
-    if (set[0] > set[1]) winsA++;
-    else if (set[1] > set[0]) winsB++;
+    if (set && typeof set[0] === 'number' && typeof set[1] === 'number') {
+      if (set[0] > set[1]) winsA++;
+      else if (set[1] > set[0]) winsB++;
+    }
   }
   if (winsA > winsB) return match.a.id;
   if (winsB > winsA) return match.b.id;
@@ -345,16 +392,22 @@ function calculateKnockoutWinner(match) {
 }
 
 // Registrar semifinal
-function recordSemiResult(semiId, set1, set2, set3) {
+function recordSemiResult(semiId, set1, set2, set3, set4, set5) {
   const s = semifinals.find((x) => x.id === semiId);
-  s.sets = [set1, set2, set3].filter(Boolean);
-  s.winner = calculateKnockoutWinner(s);
-  saveToLocalStorage(); // GUARDADO
+  if (s) {
+    s.sets = [set1, set2, set3, set4, set5].filter(Boolean);
+    s.winner = calculateKnockoutWinner(s);
+    saveTournamentData();
+  }
 }
 
 // Generar final y partido 3º-4º
 function generateFinals() {
-  if (semifinals.length < 2 || semifinals.some((s) => !s.winner)) return;
+  if (semifinals.length < 2 || semifinals.some((s) => !s.winner)) {
+    finalMatch = null;
+    thirdPlace = null;
+    return;
+  }
 
   const winners = semifinals.map((s) => (s.winner === s.a.id ? s.a : s.b));
   const losers = semifinals.map((s) => (s.winner === s.a.id ? s.b : s.a));
@@ -374,28 +427,28 @@ function generateFinals() {
     winner: thirdPlace ? thirdPlace.winner : null,
   };
 
-  saveToLocalStorage(); // GUARDADO
+  saveTournamentData();
 }
 
 // Registrar resultado final
-function recordFinalResult(set1, set2, set3) {
+function recordFinalResult(set1, set2, set3, set4, set5) {
   if (!finalMatch) return;
-  finalMatch.sets = [set1, set2, set3].filter(Boolean);
+  finalMatch.sets = [set1, set2, set3, set4, set5].filter(Boolean);
   finalMatch.winner = calculateKnockoutWinner(finalMatch);
-  saveToLocalStorage(); // GUARDADO
+  saveTournamentData();
 }
 
 // Registrar resultado 3er puesto
-function recordThirdPlaceResult(set1, set2, set3) {
+function recordThirdPlaceResult(set1, set2, set3, set4, set5) {
   if (!thirdPlace) return;
-  thirdPlace.sets = [set1, set2, set3].filter(Boolean);
+  thirdPlace.sets = [set1, set2, set3, set4, set5].filter(Boolean);
   thirdPlace.winner = calculateKnockoutWinner(thirdPlace);
-  saveToLocalStorage(); // GUARDADO
+  saveTournamentData();
 }
 
 // =======================================================
 // === INICIALIZACIÓN DE LA APP ==========================
 // =======================================================
 
-// Cargar los datos al inicio
-loadFromLocalStorage();
+// Cargar los datos al inicio y escuchar cambios en tiempo real
+loadTournamentData();
