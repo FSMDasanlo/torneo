@@ -170,9 +170,8 @@
       // Asegurar que los datos se rendericen al cambiar de pestaña
       if (tabId === 'tab-parejas') renderCurrentPairs();
       if (tabId === 'tab-grupos') {
-          if (matches.length > 0) {
-              handleGenerateGroupMatches(); 
-          }
+          renderMatchesList(); // <-- CORRECCIÓN: Solo renderiza, no regenera
+          renderResultForms(); // <-- CORRECCIÓN: Solo renderiza, no regenera
       }
       if (tabId === 'tab-finales') {
           if (semifinals.length > 0) {
@@ -325,30 +324,8 @@
 
     function handleGenerateGroupMatches(){
       generateGroupMatches();
-      const container = document.getElementById('matchesList');
-      container.innerHTML = '';
-      const toggleBtn = document.getElementById('toggleMatchesBtn');
-      const generateBtn = document.getElementById('generateMatchesBtn');
-
-      // Deshabilitar el botón si hay partidos, habilitarlo si no los hay.
-      updateGenerateMatchesButtonState();
-
-      if (matches.length > 0) {
-          matches.forEach(m => {
-            const pairA = formatPairDisplay(m.a); // Usar m.a (objeto pareja)
-            const pairB = formatPairDisplay(m.b); // Usar m.b (objeto pareja)
-            container.innerHTML += `<div class="match-item"><span class="match-group">Grupo ${m.group}:</span> ${pairA} <span class="vs">vs</span> ${pairB}</div>`; 
-          });
-          toggleBtn.style.display = 'inline-block'; // Mostrar el botón
-          container.style.display = 'block'; // Asegurarse de que la lista es visible
-          const icon = toggleBtn.querySelector('i');
-          icon.classList.remove('fa-eye');
-          icon.classList.add('fa-eye-slash');
-      } else {
-          toggleBtn.style.display = 'none';
-      }
-
-      renderResultForms();
+      renderMatchesList(); // Ahora solo llama a la función de renderizado
+      renderResultForms(); // Y a la de renderizar los formularios de resultados
     }
 
     function toggleMatchesList() {
@@ -370,10 +347,31 @@
         }
     }
 
+    // NUEVA FUNCIÓN: Solo renderiza la lista de partidos, sin regenerarlos
+    function renderMatchesList() {
+        const container = document.getElementById('matchesList');
+        container.innerHTML = '';
+        const toggleBtn = document.getElementById('toggleMatchesBtn');
+
+        updateGenerateMatchesButtonState(); // Actualiza el estado del botón
+
+        if (matches.length > 0) {
+            matches.forEach(m => {
+                const pairA = formatPairDisplay(m.a);
+                const pairB = formatPairDisplay(m.b);
+                container.innerHTML += `<div class="match-item"><span class="match-group">Grupo ${m.group}:</span> ${pairA} <span class="vs">vs</span> ${pairB}</div>`;
+            });
+            toggleBtn.style.display = 'inline-block';
+            container.style.display = 'block';
+        } else {
+            toggleBtn.style.display = 'none';
+            container.style.display = 'none';
+        }
+    }
+
     function renderResultForms(){
       const container = document.getElementById('resultForms');
       container.innerHTML = '';
-
       [1, 2].forEach(groupNum => {
         const groupMatches = matches.filter(m => m.group == groupNum);
         if (groupMatches.length > 0) {
@@ -385,17 +383,14 @@
                 const hasResult = m.sets && m.sets.length > 0;
                 const registerButtonClass = hasResult ? 'btn-success' : 'btn-secondary';
                 
-                // Valores para los sets de cada pareja
-                const s1_a = m.sets[0] ? m.sets[0][0] : '';
-                const s1_b = m.sets[0] ? m.sets[0][1] : '';
-                const s2_a = m.sets[1] ? m.sets[1][0] : '';
-                const s2_b = m.sets[1] ? m.sets[1][1] : '';
-                const s3_a = m.sets[2] ? m.sets[2][0] : '';
-                const s3_b = m.sets[2] ? m.sets[2][1] : '';
-                const s4_a = m.sets[3] ? m.sets[3][0] : '';
-                const s4_b = m.sets[3] ? m.sets[3][1] : '';
-                const s5_a = m.sets[4] ? m.sets[4][0] : '';
-                const s5_b = m.sets[4] ? m.sets[4][1] : '';
+                // --- CORRECCIÓN FINAL ---
+                // Asegurarse de que m.sets existe antes de intentar acceder a sus índices.
+                const sets = m.sets || [];
+                const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
+                const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
+                const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
+                const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
+                const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
                 
                 container.innerHTML += `
                     <div class="result-form-item">
@@ -452,13 +447,18 @@
       const s5_a = document.getElementById(`s5-a-${id}`).value;
       const s5_b = document.getElementById(`s5-b-${id}`).value;
 
-      const s1 = (s1_a !== '' && s1_b !== '') ? [parseInt(s1_a), parseInt(s1_b)] : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? [parseInt(s2_a), parseInt(s2_b)] : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? [parseInt(s3_a), parseInt(s3_b)] : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? [parseInt(s4_a), parseInt(s4_b)] : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? [parseInt(s5_a), parseInt(s5_b)] : null;
+      // CORRECCIÓN FINAL: Crear objetos {a, b} en lugar de arrays [a, b]
+      const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
+      const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
+      const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
+      const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
+      const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
 
-      recordResult(id, s1, s2, s3, s4, s5);
+      // --- PRUEBA DE DEPURACIÓN ---
+      console.log(`%c[PUNTO A: CLICK] Datos recogidos del formulario para el partido ${id}:`, 'color: orange; font-weight: bold;', {s1, s2, s3, s4, s5});
+      // --------------------------
+
+      recordResult(id, s1, s2, s3, s4, s5); // app.js ahora espera objetos
       showNotification('Resultado registrado correctamente.');
       renderResultForms(); // Volver a renderizar para actualizar el color del botón
     }
@@ -519,11 +519,12 @@
       semifinals.forEach((s, index) => {
         const id = s.id;
 
-        const s1_a = s.sets[0] ? s.sets[0][0] : ''; const s1_b = s.sets[0] ? s.sets[0][1] : '';
-        const s2_a = s.sets[1] ? s.sets[1][0] : ''; const s2_b = s.sets[1] ? s.sets[1][1] : '';
-        const s3_a = s.sets[2] ? s.sets[2][0] : ''; const s3_b = s.sets[2] ? s.sets[2][1] : '';
-        const s4_a = s.sets[3] ? s.sets[3][0] : ''; const s4_b = s.sets[3] ? s.sets[3][1] : '';
-        const s5_a = s.sets[4] ? s.sets[4][0] : ''; const s5_b = s.sets[4] ? s.sets[4][1] : '';
+        const sets = s.sets || [];
+        const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
+        const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
+        const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
+        const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
+        const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
 
         const winnerIconA = s.winner === s.a.id ? ' <i class="fas fa-trophy winner-icon"></i>' : '';
         const winnerIconB = s.winner === s.b.id ? ' <i class="fas fa-trophy winner-icon"></i>' : '';
@@ -572,11 +573,11 @@
       const s4_a = document.getElementById(`semi-s4-a-${id}`).value; const s4_b = document.getElementById(`semi-s4-b-${id}`).value;
       const s5_a = document.getElementById(`semi-s5-a-${id}`).value; const s5_b = document.getElementById(`semi-s5-b-${id}`).value;
 
-      const s1 = (s1_a !== '' && s1_b !== '') ? [parseInt(s1_a), parseInt(s1_b)] : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? [parseInt(s2_a), parseInt(s2_b)] : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? [parseInt(s3_a), parseInt(s3_b)] : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? [parseInt(s4_a), parseInt(s4_b)] : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? [parseInt(s5_a), parseInt(s5_b)] : null;
+      const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
+      const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
+      const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
+      const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
+      const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
 
       recordSemiResult(id, s1, s2, s3, s4, s5);
       showNotification('Resultado de semifinal registrado.');
@@ -589,11 +590,12 @@
       container.innerHTML = '';
 
       if(finalMatch){
-        const s1_a = finalMatch.sets[0] ? finalMatch.sets[0][0] : ''; const s1_b = finalMatch.sets[0] ? finalMatch.sets[0][1] : '';
-        const s2_a = finalMatch.sets[1] ? finalMatch.sets[1][0] : ''; const s2_b = finalMatch.sets[1] ? finalMatch.sets[1][1] : '';
-        const s3_a = finalMatch.sets[2] ? finalMatch.sets[2][0] : ''; const s3_b = finalMatch.sets[2] ? finalMatch.sets[2][1] : '';
-        const s4_a = finalMatch.sets[3] ? finalMatch.sets[3][0] : ''; const s4_b = finalMatch.sets[3] ? finalMatch.sets[3][1] : '';
-        const s5_a = finalMatch.sets[4] ? finalMatch.sets[4][0] : ''; const s5_b = finalMatch.sets[4] ? finalMatch.sets[4][1] : '';
+        const sets = finalMatch.sets || [];
+        const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
+        const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
+        const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
+        const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
+        const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
         const winnerIconA = finalMatch.winner === finalMatch.a.id ? ' <i class="fas fa-crown winner-icon"></i>' : '';
         const winnerIconB = finalMatch.winner === finalMatch.b.id ? ' <i class="fas fa-crown winner-icon"></i>' : '';
 
@@ -623,11 +625,12 @@
       }
 
       if(thirdPlace){
-        const s1_a = thirdPlace.sets[0] ? thirdPlace.sets[0][0] : ''; const s1_b = thirdPlace.sets[0] ? thirdPlace.sets[0][1] : '';
-        const s2_a = thirdPlace.sets[1] ? thirdPlace.sets[1][0] : ''; const s2_b = thirdPlace.sets[1] ? thirdPlace.sets[1][1] : '';
-        const s3_a = thirdPlace.sets[2] ? thirdPlace.sets[2][0] : ''; const s3_b = thirdPlace.sets[2] ? thirdPlace.sets[2][1] : '';
-        const s4_a = thirdPlace.sets[3] ? thirdPlace.sets[3][0] : ''; const s4_b = thirdPlace.sets[3] ? thirdPlace.sets[3][1] : '';
-        const s5_a = thirdPlace.sets[4] ? thirdPlace.sets[4][0] : ''; const s5_b = thirdPlace.sets[4] ? thirdPlace.sets[4][1] : '';
+        const sets = thirdPlace.sets || [];
+        const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
+        const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
+        const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
+        const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
+        const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
         const winnerIconA = thirdPlace.winner === thirdPlace.a.id ? ' <i class="fas fa-medal winner-icon"></i>' : '';
         const winnerIconB = thirdPlace.winner === thirdPlace.b.id ? ' <i class="fas fa-medal winner-icon"></i>' : '';
 
@@ -664,11 +667,11 @@
       const s4_a = document.getElementById(`final-s4-a`).value; const s4_b = document.getElementById(`final-s4-b`).value;
       const s5_a = document.getElementById(`final-s5-a`).value; const s5_b = document.getElementById(`final-s5-b`).value;
 
-      const s1 = (s1_a !== '' && s1_b !== '') ? [parseInt(s1_a), parseInt(s1_b)] : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? [parseInt(s2_a), parseInt(s2_b)] : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? [parseInt(s3_a), parseInt(s3_b)] : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? [parseInt(s4_a), parseInt(s4_b)] : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? [parseInt(s5_a), parseInt(s5_b)] : null;
+      const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
+      const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
+      const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
+      const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
+      const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
 
       recordFinalResult(s1,s2,s3,s4,s5);
       showNotification('Resultado final registrado.');
@@ -682,11 +685,11 @@
       const s4_a = document.getElementById(`third-s4-a`).value; const s4_b = document.getElementById(`third-s4-b`).value;
       const s5_a = document.getElementById(`third-s5-a`).value; const s5_b = document.getElementById(`third-s5-b`).value;
 
-      const s1 = (s1_a !== '' && s1_b !== '') ? [parseInt(s1_a), parseInt(s1_b)] : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? [parseInt(s2_a), parseInt(s2_b)] : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? [parseInt(s3_a), parseInt(s3_b)] : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? [parseInt(s4_a), parseInt(s4_b)] : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? [parseInt(s5_a), parseInt(s5_b)] : null;
+      const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
+      const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
+      const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
+      const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
+      const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
 
       recordThirdPlaceResult(s1,s2,s3,s4,s5);
       showNotification('Resultado de 3er puesto registrado.');

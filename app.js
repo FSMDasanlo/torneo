@@ -100,16 +100,9 @@ function loadTournamentData() {
       // Llama a todas las funciones de renderizado para refrescar la vista
       renderCurrentPairs();
       updateGenerateMatchesButtonState(); // Actualiza el estado del botón de generar partidos
-      updateTournamentHeader(tournamentName); // Actualizar el título del torneo
-      const activeTab = document.querySelector('.tab-button.active');
-      if (activeTab) {
-        if (activeTab.innerText.includes('Cuadro')) handleGenerateGroupMatches();
-        if (activeTab.innerText.includes('Clasificación')) handleShowStandings();
-        if (activeTab.innerText.includes('Eliminatorias')) {
-            handleGenerateSemifinals();
-            handleGenerateFinals();
-        }
-      }
+      updateTournamentHeader(tournamentName); // Actualizar el título del torneo      
+      // La lógica de renderizado de cada pestaña se gestiona ahora en openTab()
+      // para evitar regeneraciones automáticas no deseadas al cargar.
 
     } else {
       // Esto puede pasar si el ID es incorrecto o el documento fue borrado.
@@ -235,14 +228,19 @@ function generateGroupMatches() {
               (m.a.id === pair2Id && m.b.id === pair1Id))
         );
 
-        newMatches.push({
-          id: existing ? existing.id : Date.now() + Math.random(),
-          group: g,
-          a: pairs[i],
-          b: pairs[j],
-          // Si el partido existe, conservamos sus sets. Si no, creamos un array vacío.
-          sets: existing && existing.sets ? existing.sets : [],
-        });
+        if (existing) {
+          // Si el partido existe, usamos SUS datos para mantener la coherencia de objetos.
+          newMatches.push(existing);
+        } else {
+          // Si es un partido nuevo, lo creamos.
+          newMatches.push({
+            id: Date.now() + Math.random(),
+            group: g,
+            a: pairs[i],
+            b: pairs[j],
+            sets: [],
+          });
+        }
       }
     }
   }
@@ -254,7 +252,10 @@ function generateGroupMatches() {
 function recordResult(matchId, set1, set2, set3, set4, set5) {
   const match = matches.find((m) => m.id === matchId);
   if (match) {
-    match.sets = [set1, set2, set3, set4, set5].filter(Boolean);
+    // CORRECCIÓN FINAL: Guardar como un array de objetos, no de arrays.
+    // Esto es compatible con Firestore.
+    const setsToSave = [set1, set2, set3, set4, set5].filter(set => set !== null);
+    match.sets = setsToSave; // La función handleRecordResult ya los crea como objetos
     saveTournamentData();
   }
 }
@@ -267,10 +268,10 @@ function getMatchResult(match) {
     gamesB = 0;
   let winner = null;
   for (const set of match.sets) {
-    if (set && typeof set[0] === 'number' && typeof set[1] === 'number') {
-      gamesA += set[0];
-      gamesB += set[1];
-      if (set[0] > set[1]) setsA++;
+    if (set && typeof set.a === 'number' && typeof set.b === 'number') {
+      gamesA += set.a;
+      gamesB += set.b;
+      if (set.a > set.b) setsA++;
       else setsB++;
     }
   }
@@ -384,10 +385,10 @@ function generateSemifinals() {
 function calculateKnockoutWinner(match) {
   let winsA = 0,
     winsB = 0;
-  for (const set of match.sets) {
-    if (set && typeof set[0] === 'number' && typeof set[1] === 'number') {
-      if (set[0] > set[1]) winsA++;
-      else if (set[1] > set[0]) winsB++;
+  for (const set of match.sets) { // Ahora 'set' es un objeto {a, b}
+    if (set && typeof set.a === 'number' && typeof set.b === 'number') {
+      if (set.a > set.b) winsA++;
+      else if (set.b > set.a) winsB++;
     }
   }
   if (winsA > winsB) return match.a.id;
@@ -399,7 +400,7 @@ function calculateKnockoutWinner(match) {
 function recordSemiResult(semiId, set1, set2, set3, set4, set5) {
   const s = semifinals.find((x) => x.id === semiId);
   if (s) {
-    s.sets = [set1, set2, set3, set4, set5].filter(Boolean);
+    s.sets = [set1, set2, set3, set4, set5].filter(set => set !== null);
     s.winner = calculateKnockoutWinner(s);
     saveTournamentData();
   }
@@ -437,7 +438,7 @@ function generateFinals() {
 // Registrar resultado final
 function recordFinalResult(set1, set2, set3, set4, set5) {
   if (!finalMatch) return;
-  finalMatch.sets = [set1, set2, set3, set4, set5].filter(Boolean);
+  finalMatch.sets = [set1, set2, set3, set4, set5].filter(set => set !== null);
   finalMatch.winner = calculateKnockoutWinner(finalMatch);
   saveTournamentData();
 }
@@ -445,7 +446,7 @@ function recordFinalResult(set1, set2, set3, set4, set5) {
 // Registrar resultado 3er puesto
 function recordThirdPlaceResult(set1, set2, set3, set4, set5) {
   if (!thirdPlace) return;
-  thirdPlace.sets = [set1, set2, set3, set4, set5].filter(Boolean);
+  thirdPlace.sets = [set1, set2, set3, set4, set5].filter(set => set !== null);
   thirdPlace.winner = calculateKnockoutWinner(thirdPlace);
   saveTournamentData();
 }
