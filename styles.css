@@ -193,11 +193,12 @@ input:focus, select:focus {
 /* --- Estilos de Cajas de Parejas (ACTUALIZADO) --- */
 
 .pair-box {
-    display: inline-block;
+    display: inline-block; /* Cambiado a inline-block para que width funcione */
     padding: 3px 8px;
     border-radius: 4px;
     font-weight: 600;
     margin: 0 5px;
+    width: 250px; /* Ancho fijo para todas las cajas */
     white-space: nowrap; 
     color: #333; 
     /* El color de fondo y el borde se aplican con estilo inline desde index.html */
@@ -292,13 +293,13 @@ input:focus, select:focus {
 
 .result-table td:first-child {
     text-align: left;
-    min-width: 250px; /* Espacio mínimo para nombres */
+    min-width: auto; /* Eliminamos el ancho mínimo para que se ajuste */
 }
 
 .set-input {
-    width: 45px; /* Columnas de set más estrechas */
+    width: 40px; /* Columnas de set más estrechas */
     text-align: center;
-    padding: 5px;
+    padding: 8px 4px; /* Más alto, menos ancho */
     border: 1px solid #ccc;
     border-radius: 4px;
 }
@@ -439,11 +440,21 @@ input:focus, select:focus {
       align-items: flex-start;
       flex-direction: column;
   }
-  .match-item .pair-box {
-      /* Asegura que las cajas de pareja no rompan el layout en móvil */
-      margin: 5px 0;
+  .match-item .pair-box, .result-table .pair-box {
+      width: 100%; /* Las cajas de pareja ocupan todo el ancho disponible */
+      box-sizing: border-box; /* Para que el padding no sume al ancho */
+      margin: 2px 0;
+  }
+  .result-table td:first-child {
+      min-width: 150px; /* Un mínimo para que no se aplaste demasiado */
+  }
+  /* Para que la tabla de resultados se pueda desplazar horizontalmente en móvil */
+  .result-form-item {
       width: 100%;
-      text-align: center;
+      overflow-x: auto; /* ¡Magia para el scroll horizontal! */
+  }
+  .result-table {
+      width: 100%; /* La tabla intenta ocupar el 100%, pero el overflow la controla */
   }
 }
  /* --- Estilos de la Galería / Carrusel --- */

@@ -43,6 +43,12 @@
             color: #e74c3c;
             cursor: pointer;
         }
+        .btn-copy-small {
+            background: none;
+            border: none;
+            color: #3498db; /* Un azul para diferenciarlo */
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +124,45 @@
         }
     }
 
+    async function copyTournament(idToCopy, originalName) {
+        const newName = prompt(`Introduce el nombre para la copia del torneo:`, `Copia de ${originalName}`);
+        if (!newName || newName.trim() === '') {
+            // El usuario canceló o no introdujo nombre
+            return; 
+        }
+
+        try {
+            // 1. Leer los datos del torneo original
+            const docRef = db.collection('tournaments').doc(idToCopy);
+            const doc = await docRef.get();
+
+            if (!doc.exists) {
+                alert('Error: El torneo que intentas copiar no existe.');
+                return;
+            }
+
+            const originalData = doc.data();
+
+            // 2. Crear el nuevo objeto de torneo, copiando solo lo que nos interesa
+            const newData = {
+                name: newName.trim(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                groups: originalData.groups || { 1: [], 2: [] }, // Copia las parejas y grupos
+                groupLimit: originalData.groupLimit || 4,       // Copia el límite
+                nextColorIndex: originalData.nextColorIndex || 0, // Copia el índice de color
+                matches: [], semifinals: [], finalMatch: null, thirdPlace: null // RESULTADOS LIMPIOS
+            };
+
+            // 3. Crear el nuevo torneo y redirigir
+            const newDocRef = await db.collection('tournaments').add(newData);
+            window.location.href = `torneo.html?id=${newDocRef.id}`;
+
+        } catch (error) {
+            console.error("Error al copiar el torneo: ", error);
+            alert("Hubo un error al intentar copiar el torneo.");
+        }
+    }
+
     // Cargar y mostrar la lista de torneos al cargar la página
     window.onload = () => {
         const listContainer = document.getElementById('tournamentsList');
@@ -138,6 +183,9 @@
                             <div class="tournament-date">Creado el: ${date}</div>
                         </div>
                         <div class="actions">
+                            <button class="btn-copy-small" onclick="event.stopPropagation(); copyTournament('${doc.id}', '${tournamentName.replace(/'/g, "\\'")}')" title="Copiar torneo">
+                                <i class="fas fa-copy"></i>
+                            </button>
                             <button class="btn-delete-small" onclick="event.stopPropagation(); deleteTournament('${doc.id}', '${tournamentName.replace(/'/g, "\\'")}')" title="Borrar torneo">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
