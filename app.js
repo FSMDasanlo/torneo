@@ -99,6 +99,7 @@ function loadTournamentData() {
       }
       // Llama a todas las funciones de renderizado para refrescar la vista
       renderCurrentPairs();
+      updateGenerateMatchesButtonState(); // Actualiza el estado del botón de generar partidos
       updateTournamentHeader(tournamentName); // Actualizar el título del torneo
       const activeTab = document.querySelector('.tab-button.active');
       if (activeTab) {
@@ -184,6 +185,7 @@ function deletePair(pairId) {
     thirdPlace = null;
 
     saveTournamentData();
+    updateGenerateMatchesButtonState(); // Actualiza el estado del botón al borrar una pareja
   }
 }
 
@@ -212,12 +214,12 @@ function generateGroupMatches() {
   const oldMatches = matches.map((m) => ({
     id: m.id,
     group: m.group,
-    a: m.a, // <-- CORRECCIÓN: Guardar el objeto de pareja completo
-    b: m.b, // <-- CORRECCIÓN: Guardar el objeto de pareja completo
+    a: m.a,
+    b: m.b,
     sets: m.sets,
   }));
 
-  matches = [];
+  const newMatches = []; // Usamos una nueva variable temporal en lugar de borrar la principal
   for (const g of [1, 2]) {
     const pairs = groups[g];
     for (let i = 0; i < pairs.length; i++) {
@@ -229,20 +231,22 @@ function generateGroupMatches() {
         const existing = oldMatches.find(
           (m) =>
             m.group == g && // Usar == para comparación flexible de número y string si es necesario
-            ((m.a.id === pair1Id && m.b.id === pair2Id) || // <-- CORRECCIÓN: Comparar con el ID dentro del objeto
-              (m.a.id === pair2Id && m.b.id === pair1Id)) // <-- CORRECCIÓN: Comparar con el ID dentro del objeto
+            ((m.a.id === pair1Id && m.b.id === pair2Id) ||
+              (m.a.id === pair2Id && m.b.id === pair1Id))
         );
 
-        matches.push({
+        newMatches.push({
           id: existing ? existing.id : Date.now() + Math.random(),
           group: g,
           a: pairs[i],
           b: pairs[j],
-          sets: existing ? existing.sets : [],
+          // Si el partido existe, conservamos sus sets. Si no, creamos un array vacío.
+          sets: existing && existing.sets ? existing.sets : [],
         });
       }
     }
   }
+  matches = newMatches; // Reemplazamos la lista de partidos principal con la nueva, ya completa.
   saveTournamentData();
 }
 
