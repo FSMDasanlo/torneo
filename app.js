@@ -212,8 +212,8 @@ function generateGroupMatches() {
   const oldMatches = matches.map((m) => ({
     id: m.id,
     group: m.group,
-    a: m.a.id,
-    b: m.b.id,
+    a: m.a, // <-- CORRECCIÓN: Guardar el objeto de pareja completo
+    b: m.b, // <-- CORRECCIÓN: Guardar el objeto de pareja completo
     sets: m.sets,
   }));
 
@@ -229,8 +229,8 @@ function generateGroupMatches() {
         const existing = oldMatches.find(
           (m) =>
             m.group == g && // Usar == para comparación flexible de número y string si es necesario
-            ((m.a === pair1Id && m.b === pair2Id) ||
-              (m.a === pair2Id && m.b === pair1Id))
+            ((m.a.id === pair1Id && m.b.id === pair2Id) || // <-- CORRECCIÓN: Comparar con el ID dentro del objeto
+              (m.a.id === pair2Id && m.b.id === pair1Id)) // <-- CORRECCIÓN: Comparar con el ID dentro del objeto
         );
 
         matches.push({
