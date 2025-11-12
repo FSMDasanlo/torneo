@@ -22,6 +22,9 @@
       <button class="tab-button" onclick="openTab(event, 'tab-grupos')">
         <i class="fas fa-calendar-alt"></i> Cuadro
       </button>
+      <button class="tab-button" onclick="openTab(event, 'tab-resultados')">
+        <i class="fas fa-clipboard-check"></i> Resultados
+      </button>
       <button class="tab-button" onclick="openTab(event, 'tab-clasificacion')">
         <i class="fas fa-trophy"></i> Clasificación
       </button>
@@ -68,6 +71,9 @@
         <button id="generateMatchesBtn" class="btn-primary" onclick="handleGenerateGroupMatches()"><i class="fas fa-cogs"></i> Generar partidos</button>
         <div id="matchesList" class="match-list"></div>
       </div>
+    </div>
+
+    <div id="tab-resultados" class="tab-content">
       <div class="section card">
         <div class="section-header">
           <h2><i class="fas fa-clipboard-check"></i> Registrar resultados</h2>
@@ -171,6 +177,9 @@
       if (tabId === 'tab-grupos') {
           renderMatchesList(); // <-- CORRECCIÓN: Solo renderiza, no regenera
           renderResultForms(); // <-- CORRECCIÓN: Solo renderiza, no regenera
+      }
+      if (tabId === 'tab-resultados') {
+          renderResultForms();
       }
       if (tabId === 'tab-finales') {
           if (semifinals.length > 0) {
@@ -410,7 +419,7 @@
                         <table class="result-table">
                             <thead>
                                 <tr>
-                                    <th>Pareja</th>
+                                    <th>Enfrentamiento</th>
                                     <th>Set 1</th>
                                     <th>Set 2</th>
                                     <th>Set 3</th>
