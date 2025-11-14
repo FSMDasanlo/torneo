@@ -34,12 +34,34 @@
       <button class="tab-button" onclick="openTab(event, 'tab-galeria')">
         <i class="fas fa-images"></i> Galería
       </button>
+      <a href="index.html" class="btn-home-nav" title="Volver al listado de torneos">
+        <i class="fas fa-home"></i>
+      </a>
     </div>
     <div id="tab-parejas" class="tab-content card" style="display: block;">
       <div class="section-header">
         <h2><i class="fas fa-user-plus"></i> Añadir pareja</h2>
         <div class="header-buttons">
-          <button class="btn-secondary" onclick="window.location.href='index.html'"><i class="fas fa-arrow-left"></i> Cambiar Torneo</button>
+          <button id="changeTournamentBtn" class="btn-secondary"><i class="fas fa-arrow-left"></i> Cambiar Torneo</button>
+        </div>
+      </div>
+
+      <!-- NUEVO: Selector de modo de torneo -->
+      <div class="section-mode-selector">
+        <h4>Modo de Torneo</h4>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="tournamentMode" value="directed" checked onchange="handleModeChange()">
+            <i class="fas fa-sitemap"></i> Dirigido (Manual)
+          </label>
+          <label>
+            <input type="radio" name="tournamentMode" value="semi-directed" onchange="handleModeChange()">
+            <i class="fas fa-random"></i> Semidirigido (Sorteo de Grupos)
+          </label>
+          <label>
+            <input type="radio" name="tournamentMode" value="open" onchange="handleModeChange()">
+            <i class="fas fa-user-friends"></i> Abierto (Sorteo de Parejas y Grupos)
+          </label>
         </div>
       </div>
 
@@ -48,28 +70,38 @@
           <input type="number" id="limitInput" value="4" min="2" onchange="handleUpdateLimit()">
       </div>
 
-      <div class="input-group" style="margin-top: 15px;">
+      <!-- Modo Dirigido (el original) -->
+      <div id="mode-directed-inputs" class="input-group" style="margin-top: 15px;">
         <select id="groupSelect">
           <option value="1">Grupo 1</option>
           <option value="2">Grupo 2</option>
         </select>
         <input type="text" id="player1" placeholder="Jugador 1">
         <input type="text" id="player2" placeholder="Jugador 2">
-        <button class="btn-primary" onclick="handleAddPair()"><i class="fas fa-plus"></i> Añadir</button>
+        <button id="addPairBtn" class="btn-primary"><i class="fas fa-plus"></i> Añadir Pareja</button>
       </div>
-      <div id="currentPairs" class="match-list" style="margin-top: 20px;"></div> 
+
+      <!-- Modo Semidirigido -->
+      <div id="mode-semi-directed-inputs" class="input-group" style="margin-top: 15px; display: none;">
+        <input type="text" id="semi-p1" placeholder="Jugador 1">
+        <input type="text" id="semi-p2" placeholder="Jugador 2">
+        <button id="addSemiPairBtn" class="btn-primary"><i class="fas fa-plus"></i> Añadir Pareja a la Bolsa</button>
+      </div>
+
+      <!-- Modo Abierto -->
+      <div id="mode-open-inputs" class="input-group" style="margin-top: 15px; display: none;">
+        <input type="text" id="open-player" placeholder="Nombre del Jugador">
+        <button id="addOpenPlayerBtn" class="btn-primary"><i class="fas fa-user-plus"></i> Añadir Jugador a la Bolsa</button>
+      </div>
+
+      <div id="currentPairs" class="list-container" style="margin-top: 20px;"></div>
     </div>
 
     <div id="tab-grupos" class="tab-content">
       <div class="section card">
-        <h2>
-            <i class="fas fa-table-tennis"></i> Partidos de fase de grupos
-            <button id="toggleMatchesBtn" class="btn-icon" onclick="toggleMatchesList()" style="margin-left: 10px; font-size: 1em; display: none;">
-                <i class="fas fa-eye-slash"></i>
-            </button>
-        </h2>
-        <button id="generateMatchesBtn" class="btn-primary" onclick="handleGenerateGroupMatches()"><i class="fas fa-cogs"></i> Generar partidos</button>
-        <div id="matchesList" class="match-list"></div>
+        <h2><i class="fas fa-table-tennis"></i> Partidos de fase de grupos</h2>
+        <button id="generateMatchesBtn" class="btn-primary"><i class="fas fa-cogs"></i> Generar partidos</button>
+        <div id="matchesList" class="list-container"></div>
       </div>
     </div>
 
@@ -77,7 +109,7 @@
       <div class="section card">
         <div class="section-header">
           <h2><i class="fas fa-clipboard-check"></i> Registrar resultados</h2>
-          <button class="btn-secondary" onclick="handleClearGroupResults()"><i class="fas fa-eraser"></i> Limpiar Resultados</button>
+          <button id="clearResultsBtn" class="btn-secondary"><i class="fas fa-eraser"></i> Limpiar Resultados</button>
         </div>
         <div id="resultForms" class="result-forms-list"></div>
       </div>
@@ -91,22 +123,22 @@
     <div id="tab-finales" class="tab-content">
       <div class="section card">
         <h2><i class="fas fa-chevron-circle-right"></i> Semifinales</h2>
-        <button class="btn-primary" onclick="handleGenerateSemifinals()"><i class="fas fa-cogs"></i> Crear semifinales</button>
+        <button id="generateSemifinalsBtn" class="btn-primary"><i class="fas fa-cogs"></i> Crear semifinales</button>
         <div id="semis" class="semis-view"></div>
       </div>
       <div class="section card">
         <h2><i class="fas fa-medal"></i> Final y 3er puesto</h2>
-        <button class="btn-primary" onclick="handleGenerateFinals()"><i class="fas fa-cogs"></i> Generar final y 3er puesto</button>
+        <button id="generateFinalAndThirdPlaceBtn" class="btn-primary"><i class="fas fa-cogs"></i> Generar final y 3er puesto</button>
         <div id="finals" class="finals-view"></div>
       </div>
       <div class="section card">
         <h2><i class="fas fa-award"></i> 5º y 6º Puesto</h2>
-        <button class="btn-primary" onclick="handleGenerateFifthPlaceMatch()"><i class="fas fa-cogs"></i> Generar partido</button>
+        <button id="generateFifthPlaceBtn" class="btn-primary"><i class="fas fa-cogs"></i> Generar partido</button>
         <div id="fifthPlace" class="finals-view"></div>
       </div>
       <div class="section card">
         <h2><i class="fas fa-list-ol"></i> 7º y 8º Puesto</h2>
-        <button class="btn-primary" onclick="handleGenerateSeventhPlaceMatch()"><i class="fas fa-cogs"></i> Generar partido</button>
+        <button id="generateSeventhPlaceBtn" class="btn-primary"><i class="fas fa-cogs"></i> Generar partido</button>
         <div id="seventhPlace" class="finals-view"></div>
       </div>
     </div>
@@ -117,8 +149,8 @@
         <div class="carousel-slide">
           <!-- Las imágenes se cargarán aquí dinámicamente -->
         </div>
-        <button class="carousel-button prev" onclick="moveSlide(-1)">&#10094;</button>
-        <button class="carousel-button next" onclick="moveSlide(1)">&#10095;</button>
+        <button class="carousel-button prev">&#10094;</button>
+        <button class="carousel-button next">&#10095;</button>
       </div>
     </div>
 
@@ -127,6 +159,23 @@
         <!-- Las notificaciones se añadirán aquí -->
     </div>
 
+    <!-- Modal para Editar Pareja -->
+    <div id="editPairModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Pareja</h2>
+            <input type="hidden" id="editPairId">
+            <div class="input-group-modal">
+                <label for="editPlayer1">Jugador 1:</label>
+                <input type="text" id="editPlayer1">
+            </div>
+            <div class="input-group-modal">
+                <label for="editPlayer2">Jugador 2:</label>
+                <input type="text" id="editPlayer2">
+            </div>
+            <button id="savePairChangesBtn" class="btn-primary">Guardar Cambios</button>
+        </div>
+    </div>
   </div> 
   
   <!-- Scripts de Firebase -->
@@ -150,785 +199,8 @@
   </script>
   
   <!-- Scripts de la aplicación -->
-  <script src="app.js"></script>
-  <script>
-    // --- Lógica de formato para las parejas (ACTUALIZADA) ---
-    // Función para actualizar el título del torneo en el header
-    function updateTournamentHeader(name) {
-      const titleElement = document.getElementById('tournamentTitle');
-      if (titleElement) {
-        titleElement.innerHTML = `<i class="fas fa-tennis-ball"></i> ${name}`;
-      }
-    }
-    function formatPairDisplay(pair) {
-        const separator = ' - '; 
-        const pairName = pair.players.join(separator);
-        // Usa el color asignado a la pareja (pair.color)
-        return `<span class="pair-box" style="background-color: ${pair.color}; border: 1px solid ${pair.color.replace('C', 'B').replace('F', 'E')};">${pairName}</span>`;
-    }
-    
-    // --- Lógica de Pestañas ---
-    function openTab(evt, tabId) {
-      var tabContents = document.getElementsByClassName("tab-content");
-      for (var i = 0; i < tabContents.length; i++) {
-        tabContents[i].style.display = "none";
-      }
-
-      var tabButtons = document.getElementsByClassName("tab-button");
-      for (var i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-      }
-
-      document.getElementById(tabId).style.display = "block";
-      evt.currentTarget.className += " active";
-      
-      // Asegurar que los datos se rendericen al cambiar de pestaña
-      if (tabId === 'tab-parejas') renderCurrentPairs();
-      if (tabId === 'tab-grupos') {
-          renderMatchesList(); // <-- CORRECCIÓN: Solo renderiza, no regenera
-          renderResultForms(); // <-- CORRECCIÓN: Solo renderiza, no regenera
-      }
-      if (tabId === 'tab-resultados') {
-          renderResultForms();
-      }
-      if (tabId === 'tab-finales') {
-          if (semifinals.length > 0) {
-              handleGenerateSemifinals(); 
-          }
-          if (finalMatch || thirdPlace) {
-              handleGenerateFinals();
-          }
-          if (fifthPlaceMatch) {
-              handleGenerateFifthPlaceMatch();
-          }
-          if (seventhPlaceMatch) {
-              handleGenerateSeventhPlaceMatch();
-          }
-      }
-      if (tabId === 'tab-clasificacion') {
-          handleShowStandings();
-      }
-      if (tabId === 'tab-galeria') {
-          initGallery();
-      }
-    }
-    
-    // Inicialización al cargar la página
-    document.addEventListener('DOMContentLoaded', () => {
-        // Abre la pestaña de Parejas al inicio
-        document.getElementById('tab-parejas').style.display = "block";
-        
-        // Actualiza el título del torneo en el header con el valor inicial de app.js
-        // (que será "Cargando..." o el valor por defecto si no hay ID)
-        // Será sobrescrito por loadTournamentData() cuando los datos lleguen de Firestore.
-        updateTournamentHeader(tournamentName);
-
-        // No necesitamos renderizar aquí, loadTournamentData() en app.js
-        // se encarga de llamar a las funciones de renderizado una vez que
-        // los datos de Firestore estén disponibles.
-    });
-
-    // --- Lógica para añadir pareja con la tecla Enter ---
-    function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault(); // Evita que el formulario se envíe (si lo hubiera)
-            handleAddPair();
-        }
-    }
-
-    document.getElementById('player1').addEventListener('keydown', handleKeyPress);
-    document.getElementById('player2').addEventListener('keydown', handleKeyPress);
-    
-    // --- Funciones de Parejas (Gestión de UI) ---
-
-    function handleUpdateLimit(){
-        const newLimit = parseInt(document.getElementById('limitInput').value);
-        if (newLimit >= 2) {
-            updateGroupLimit(newLimit); // Llama a la lógica de app.js
-            renderCurrentPairs(); // Redibuja para que se actualice el mensaje de límite
-        } else {
-            alert('El límite debe ser al menos 2.');
-            document.getElementById('limitInput').value = groupLimit; // Vuelve al valor anterior
-        }
-    }
-
-    function handleResetTournament() {
-        // La lógica de borrado está en app.js y ahora borra el torneo de la BD
-        resetTournament(); 
-    }
-
-    function handleClearGroupResults() {
-        if (confirm('¿Estás seguro de que quieres borrar todos los resultados de la fase de grupos? Los enfrentamientos se mantendrán.')) {
-            clearGroupResults(); // Lógica en app.js
-            renderResultForms(); // Vuelve a dibujar los formularios de resultados, ahora vacíos
-        }
-    }
-
-    // Renderiza el listado de parejas actual
-    function renderCurrentPairs(){
-      const container = document.getElementById('currentPairs');
-      container.innerHTML = '<h4>Parejas Registradas:</h4>';
-
-      // Actualizar estado del select de grupos
-      const groupSelect = document.getElementById('groupSelect');
-      const options = groupSelect.options;
-      for (const g of [1, 2]) {
-          const option = Array.from(options).find(opt => parseInt(opt.value) == g);
-          if (option) {
-            option.disabled = groups[g] && groups[g].length >= groupLimit; // Fix: Asegura que groups[g] exista
-          }
-      }
-
-      for(const g of [1, 2]){
-        const currentGroup = groups[g] || [];
-        container.innerHTML += `<h5><i class="fas fa-users-cog"></i> Grupo ${g} (${currentGroup.length}/${groupLimit} parejas)</h5>`;
-        
-        if (currentGroup.length === groupLimit) {
-             container.innerHTML += `<p class="limit-reached">¡Límite de ${groupLimit} parejas alcanzado para el Grupo ${g}!</p>`;
-        }
-
-        currentGroup.forEach(p => {
-            const pairNameDisplay = formatPairDisplay(p); // Usa la función de formato
-            container.innerHTML += `
-            <div class="match-item pair-item">
-                <span>${pairNameDisplay}</span>
-                <div class="pair-actions">
-                    <button class="btn-icon btn-edit" onclick="handleEditPair(${p.id}, ${g})"><i class="fas fa-edit"></i></button>
-                    <button class="btn-icon btn-delete" onclick="handleDeletePair(${p.id})"><i class="fas fa-trash-alt"></i></button>
-                </div>
-            </div>`;
-        });
-      }
-    }
-
-    function handleAddPair(){
-      const group = parseInt(document.getElementById('groupSelect').value);
-      const p1 = document.getElementById('player1').value.trim();
-      const p2 = document.getElementById('player2').value.trim();
-      
-      if(p1 && p2){
-        if (groups[group] && groups[group].length >= groupLimit) {
-             alert(`ERROR: No se pueden añadir más de ${groupLimit} parejas al Grupo ${group}.`);
-             return;
-        }
-
-        addPair(group, p1, p2);
-        document.getElementById('player1').value = '';
-        document.getElementById('player2').value = '';
-        renderCurrentPairs(); 
-      }
-    }
-
-    function handleDeletePair(pairId){
-        if(confirm('¿Estás seguro de que quieres eliminar esta pareja? Esto borrará cualquier resultado asociado.')){
-            deletePair(pairId); // Lógica en app.js
-            renderCurrentPairs();
-        }
-    }
-
-    function handleEditPair(pairId, groupId){
-        const pair = groups[groupId].find(p => p.id === pairId);
-        if (!pair) return;
-
-        const newP1 = prompt(`Editar Jugador 1 de la pareja ${pair.players.join(' - ')}:`, pair.players[0]);
-        if (newP1 === null) return; 
-
-        const newP2 = prompt(`Editar Jugador 2 de la pareja ${pair.players.join(' - ')}:`, pair.players[1]);
-        if (newP2 === null) return;
-
-        if (newP1.trim() && newP2.trim()){
-            editPair(pairId, newP1.trim(), newP2.trim()); // Lógica en app.js
-            renderCurrentPairs();
-        } else {
-            alert('Ambos nombres de jugador son obligatorios.');
-        }
-    }
-
-    // --- Funciones de Partidos ---
-
-    function handleGenerateGroupMatches(){
-      generateGroupMatches();
-      renderMatchesList(); // Ahora solo llama a la función de renderizado
-      renderResultForms(); // Y a la de renderizar los formularios de resultados
-    }
-
-    function toggleMatchesList() {
-        const matchesList = document.getElementById('matchesList');
-        matchesList.style.display = matchesList.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function updateGenerateMatchesButtonState() {
-        const generateBtn = document.getElementById('generateMatchesBtn');
-        if (!generateBtn) return;
-
-        // Si hay partidos generados, deshabilita el botón. Si no, lo habilita.
-        if (matches.length > 0) {
-            generateBtn.disabled = true;
-            generateBtn.innerHTML = '<i class="fas fa-check"></i> Partidos Generados';
-        } else {
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = '<i class="fas fa-cogs"></i> Generar partidos';
-        }
-    }
-
-    // NUEVA FUNCIÓN: Solo renderiza la lista de partidos, sin regenerarlos
-    function renderMatchesList() {
-        const container = document.getElementById('matchesList');
-        container.innerHTML = '';
-        const toggleBtn = document.getElementById('toggleMatchesBtn');
-
-        updateGenerateMatchesButtonState(); // Actualiza el estado del botón
-
-        if (matches.length > 0) {
-            // Agrupar partidos por grupo para una mejor visualización
-            const matchesByGroup = { 1: [], 2: [] };
-            matches.forEach(m => {
-                if (matchesByGroup[m.group]) {
-                    matchesByGroup[m.group].push(m);
-                }
-            });
-
-            for (const groupNum in matchesByGroup) {
-                const groupMatches = matchesByGroup[groupNum];
-                if (groupMatches.length > 0) {
-                    container.innerHTML += `<h5><i class="fas fa-users-cog"></i> Grupo ${groupNum}</h5>`;
-                    groupMatches.forEach(m => {
-                        const pairA = formatPairDisplay(m.a);
-                        const pairB = formatPairDisplay(m.b);
-                        container.innerHTML += `<div class="match-item">${pairA} <span class="vs">vs</span> ${pairB}</div>`;
-                    });
-                }
-            }
-            toggleBtn.style.display = 'inline-block';
-            container.style.display = 'block';
-        } else {
-            toggleBtn.style.display = 'none';
-            container.style.display = 'none';
-        }
-    }
-
-    function renderResultForms(){
-      const container = document.getElementById('resultForms');
-      container.innerHTML = '';
-      [1, 2].forEach(groupNum => {
-        const groupMatches = matches.filter(m => m.group == groupNum);
-        if (groupMatches.length > 0) {
-            container.innerHTML += `<h4><i class="fas fa-users-cog"></i> Grupo ${groupNum}</h4>`;
-            groupMatches.forEach(m => {
-                const id = m.id;
-
-                // Determinar si el partido ya tiene un resultado guardado
-                const hasResult = m.sets && m.sets.length > 0;
-                const registerButtonClass = hasResult ? 'btn-success' : 'btn-secondary';
-                
-                // --- CORRECCIÓN FINAL ---
-                // Asegurarse de que m.sets existe antes de intentar acceder a sus índices.
-                const sets = m.sets || [];
-                const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
-                const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
-                const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
-                const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
-                const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
-                
-                container.innerHTML += `
-                    <div class="result-form-item">
-                        <table class="result-table">
-                            <thead>
-                                <tr>
-                                    <th>Enfrentamiento</th>
-                                    <th>Set 1</th>
-                                    <th>Set 2</th>
-                                    <th>Set 3</th>
-                                    <th>Set 4</th>
-                                    <th>Set 5</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>${formatPairDisplay(m.a)}</td>
-                                    <td><input type="number" min="0" id="s1-a-${id}" value="${s1_a}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s2-a-${id}" value="${s2_a}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s3-a-${id}" value="${s3_a}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s4-a-${id}" value="${s4_a}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s5-a-${id}" value="${s5_a}" class="set-input"></td>
-                                    <td rowspan="2">
-                                        <button class="${registerButtonClass}" onclick="handleRecordResult(${id})"><i class="fas fa-check"></i> Registrar</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>${formatPairDisplay(m.b)}</td>
-                                    <td><input type="number" min="0" id="s1-b-${id}" value="${s1_b}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s2-b-${id}" value="${s2_b}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s3-b-${id}" value="${s3_b}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s4-b-${id}" value="${s4_b}" class="set-input"></td>
-                                    <td><input type="number" min="0" id="s5-b-${id}" value="${s5_b}" class="set-input"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            });
-        }
-      });
-    }
-
-    function handleRecordResult(id){
-      const s1_a = document.getElementById(`s1-a-${id}`).value;
-      const s1_b = document.getElementById(`s1-b-${id}`).value;
-      const s2_a = document.getElementById(`s2-a-${id}`).value;
-      const s2_b = document.getElementById(`s2-b-${id}`).value;
-      const s3_a = document.getElementById(`s3-a-${id}`).value;
-      const s3_b = document.getElementById(`s3-b-${id}`).value;
-      const s4_a = document.getElementById(`s4-a-${id}`).value;
-      const s4_b = document.getElementById(`s4-b-${id}`).value;
-      const s5_a = document.getElementById(`s5-a-${id}`).value;
-      const s5_b = document.getElementById(`s5-b-${id}`).value;
-
-      // CORRECCIÓN FINAL: Crear objetos {a, b} en lugar de arrays [a, b]
-      const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
-
-      // --- PRUEBA DE DEPURACIÓN ---
-      console.log(`%c[PUNTO A: CLICK] Datos recogidos del formulario para el partido ${id}:`, 'color: orange; font-weight: bold;', {s1, s2, s3, s4, s5});
-      // --------------------------
-
-      recordResult(id, s1, s2, s3, s4, s5); // app.js ahora espera objetos
-      showNotification('Resultado registrado correctamente.');
-      renderResultForms(); // Volver a renderizar para actualizar el color del botón
-    }
-
-    function parseSet(str){
-      if(!str) return null;
-      const nums = str.split('-').map(n => parseInt(n.trim()));
-      return nums.length===2 ? nums : null;
-    }
-    
-    function showNotification(message) {
-        const container = document.getElementById('notification-container');
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.textContent = message;
-        
-        container.appendChild(notification);
-        
-        // La notificación se muestra y luego se desvanece
-        setTimeout(() => {
-            notification.remove();
-        }, 3000); // La notificación dura 3 segundos
-    }
-
-    function handleShowStandings(){
-      const st = computeStandings();
-      const container = document.getElementById('standings');
-      let html = '';
-      for(const g of [1,2]){
-        html += `<h3><i class="fas fa-list-ol"></i> Grupo ${g}</h3>`;
-        html += `<table class="standings-table">
-                    <thead>
-                        <tr>
-                            <th>Pos</th>
-                            <th>Pareja</th>
-                            <th>Puntos</th>
-                            <th>Sets Ganados</th>
-                            <th>Juegos Ganados</th>
-                        </tr>
-                    </thead>
-                    <tbody>`; 
-        if (st[g]) {
-            st[g].forEach((r, index) => {
-                const pairNameDisplay = formatPairDisplay(r.pair);
-                const rowClass = index < 2 ? 'class="qualified-row"' : ''; // Clase para los 2 primeros
-                html += `<tr ${rowClass}><td>${index + 1}</td><td>${pairNameDisplay}</td><td>${r.puntos}</td><td>${r.sets}</td><td>${r.juegos}</td></tr>`;
-            });
-        }
-        html += `</tbody></table>`;
-      }
-      container.innerHTML = html;
-    }
-
-    function handleGenerateSemifinals(){
-      generateSemifinals();
-      const container = document.getElementById('semis');
-      container.innerHTML = '';
-      semifinals.forEach((s, index) => {
-        const id = s.id;
-
-        const sets = s.sets || [];
-        const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
-        const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
-        const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
-        const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
-        const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
-
-        const winnerIconA = s.winner === s.a.id ? ' <i class="fas fa-trophy winner-icon"></i>' : '';
-        const winnerIconB = s.winner === s.b.id ? ' <i class="fas fa-trophy winner-icon"></i>' : '';
-
-        container.innerHTML += `
-            <div class="result-form-item knockout-match ${s.winner ? 'match-completed' : ''}">
-                <table class="result-table">
-                    <thead>
-                        <tr>
-                            <th>Semifinal ${index + 1}</th>
-                            <th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>${formatPairDisplay(s.a)}${winnerIconA}</td>
-                            <td><input type="number" min="0" id="semi-s1-a-${id}" value="${s1_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s2-a-${id}" value="${s2_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s3-a-${id}" value="${s3_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s4-a-${id}" value="${s4_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s5-a-${id}" value="${s5_a}" class="set-input"></td>
-                            <td rowspan="2">
-                                <button class="btn-secondary" onclick="handleRecordSemi(${id})"><i class="fas fa-check"></i> Registrar</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>${formatPairDisplay(s.b)}${winnerIconB}</td>
-                            <td><input type="number" min="0" id="semi-s1-b-${id}" value="${s1_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s2-b-${id}" value="${s2_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s3-b-${id}" value="${s3_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s4-b-${id}" value="${s4_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="semi-s5-b-${id}" value="${s5_b}" class="set-input"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `;
-      });
-    }
-
-    function handleRecordSemi(id){
-      const s1_a = document.getElementById(`semi-s1-a-${id}`).value; const s1_b = document.getElementById(`semi-s1-b-${id}`).value;
-      const s2_a = document.getElementById(`semi-s2-a-${id}`).value; const s2_b = document.getElementById(`semi-s2-b-${id}`).value;
-      const s3_a = document.getElementById(`semi-s3-a-${id}`).value; const s3_b = document.getElementById(`semi-s3-b-${id}`).value;
-      const s4_a = document.getElementById(`semi-s4-a-${id}`).value; const s4_b = document.getElementById(`semi-s4-b-${id}`).value;
-      const s5_a = document.getElementById(`semi-s5-a-${id}`).value; const s5_b = document.getElementById(`semi-s5-b-${id}`).value;
-
-      const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
-
-      recordSemiResult(id, s1, s2, s3, s4, s5);
-      showNotification('Resultado de semifinal registrado.');
-      handleGenerateSemifinals(); 
-    }
-
-    function handleGenerateFinals(){
-      generateFinals();
-      const container = document.getElementById('finals');
-      container.innerHTML = '';
-
-      if(finalMatch){
-        const sets = finalMatch.sets || [];
-        const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
-        const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
-        const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
-        const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
-        const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
-        const winnerIconA = finalMatch.winner === finalMatch.a.id ? ' <i class="fas fa-crown winner-icon"></i>' : '';
-        const winnerIconB = finalMatch.winner === finalMatch.b.id ? ' <i class="fas fa-crown winner-icon"></i>' : '';
-
-        container.innerHTML += `<div class="result-form-item knockout-match ${finalMatch.winner ? 'match-completed' : ''}"><h4><i class="fas fa-crown"></i> Final</h4>
-          <table class="result-table">
-              <thead><tr><th>FINAL</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th><th></th></tr></thead>
-              <tbody>
-                  <tr>
-                      <td>${formatPairDisplay(finalMatch.a)}${winnerIconA}</td>
-                      <td><input type="number" min="0" id="final-s1-a" value="${s1_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s2-a" value="${s2_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s3-a" value="${s3_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s4-a" value="${s4_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s5-a" value="${s5_a}" class="set-input"></td>
-                      <td rowspan="2"><button class="btn-secondary" onclick="handleRecordFinal()"><i class="fas fa-check"></i> Registrar</button></td>
-                  </tr>
-                  <tr>
-                      <td>${formatPairDisplay(finalMatch.b)}${winnerIconB}</td>
-                      <td><input type="number" min="0" id="final-s1-b" value="${s1_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s2-b" value="${s2_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s3-b" value="${s3_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s4-b" value="${s4_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="final-s5-b" value="${s5_b}" class="set-input"></td>
-                  </tr>
-              </tbody>
-          </table></div>`;
-      }
-
-      if(thirdPlace){
-        const sets = thirdPlace.sets || [];
-        const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
-        const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
-        const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
-        const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
-        const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
-        const winnerIconA = thirdPlace.winner === thirdPlace.a.id ? ' <i class="fas fa-medal winner-icon"></i>' : '';
-        const winnerIconB = thirdPlace.winner === thirdPlace.b.id ? ' <i class="fas fa-medal winner-icon"></i>' : '';
-
-        container.innerHTML += `<div class="result-form-item knockout-match ${thirdPlace.winner ? 'match-completed' : ''}"><h4><i class="fas fa-medal"></i> 3er Puesto</h4>
-          <table class="result-table">
-              <thead><tr><th>Tercer y Cuarto puesto</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th><th></th></tr></thead>
-              <tbody>
-                  <tr>
-                      <td>${formatPairDisplay(thirdPlace.a)}${winnerIconA}</td>
-                      <td><input type="number" min="0" id="third-s1-a" value="${s1_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s2-a" value="${s2_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s3-a" value="${s3_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s4-a" value="${s4_a}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s5-a" value="${s5_a}" class="set-input"></td>
-                      <td rowspan="2"><button class="btn-secondary" onclick="handleRecordThird()"><i class="fas fa-check"></i> Registrar</button></td>
-                  </tr>
-                  <tr>
-                      <td>${formatPairDisplay(thirdPlace.b)}${winnerIconB}</td>
-                      <td><input type="number" min="0" id="third-s1-b" value="${s1_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s2-b" value="${s2_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s3-b" value="${s3_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s4-b" value="${s4_b}" class="set-input"></td>
-                      <td><input type="number" min="0" id="third-s5-b" value="${s5_b}" class="set-input"></td>
-                  </tr>
-              </tbody>
-          </table></div>`;
-      }
-    }
-
-    function handleRecordFinal(){
-      const s1_a = document.getElementById(`final-s1-a`).value; const s1_b = document.getElementById(`final-s1-b`).value;
-      const s2_a = document.getElementById(`final-s2-a`).value; const s2_b = document.getElementById(`final-s2-b`).value;
-      const s3_a = document.getElementById(`final-s3-a`).value; const s3_b = document.getElementById(`final-s3-b`).value;
-      const s4_a = document.getElementById(`final-s4-a`).value; const s4_b = document.getElementById(`final-s4-b`).value;
-      const s5_a = document.getElementById(`final-s5-a`).value; const s5_b = document.getElementById(`final-s5-b`).value;
-
-      const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
-
-      recordFinalResult(s1,s2,s3,s4,s5);
-      showNotification('Resultado final registrado.');
-      handleGenerateFinals(); 
-    }
-
-    function handleRecordThird(){
-      const s1_a = document.getElementById(`third-s1-a`).value; const s1_b = document.getElementById(`third-s1-b`).value;
-      const s2_a = document.getElementById(`third-s2-a`).value; const s2_b = document.getElementById(`third-s2-b`).value;
-      const s3_a = document.getElementById(`third-s3-a`).value; const s3_b = document.getElementById(`third-s3-b`).value;
-      const s4_a = document.getElementById(`third-s4-a`).value; const s4_b = document.getElementById(`third-s4-b`).value;
-      const s5_a = document.getElementById(`third-s5-a`).value; const s5_b = document.getElementById(`third-s5-b`).value;
-
-      const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
-      const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
-      const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
-      const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
-      const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
-
-      recordThirdPlaceResult(s1,s2,s3,s4,s5);
-      showNotification('Resultado de 3er puesto registrado.');
-      handleGenerateFinals(); 
-    }
-
-    // --- PARTIDOS POR 5º Y 7º PUESTO ---
-
-    function handleGenerateFifthPlaceMatch() {
-        generateFifthPlaceMatch(); // Lógica en app.js
-        const container = document.getElementById('fifthPlace');
-        container.innerHTML = '';
-
-        if (fifthPlaceMatch) {
-            const match = fifthPlaceMatch;
-            const sets = match.sets || [];
-            const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
-            const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
-            const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
-            const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
-            const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
-            const winnerIconA = match.winner === match.a.id ? ' <i class="fas fa-award winner-icon"></i>' : '';
-            const winnerIconB = match.winner === match.b.id ? ' <i class="fas fa-award winner-icon"></i>' : '';
-
-            container.innerHTML = `<div class="result-form-item knockout-match ${match.winner ? 'match-completed' : ''}">
-                <table class="result-table">
-                    <thead><tr><th>5º y 6º Puesto</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th><th></th></tr></thead>
-                    <tbody>
-                        <tr>
-                            <td>${formatPairDisplay(match.a)}${winnerIconA}</td>
-                            <td><input type="number" min="0" id="fifth-s1-a" value="${s1_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="fifth-s2-a" value="${s2_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="fifth-s3-a" value="${s3_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="fifth-s4-a" value="${s4_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="fifth-s5-a" value="${s5_a}" class="set-input"></td>
-                            <td rowspan="2"><button class="btn-secondary" onclick="handleRecordFifthPlace()"><i class="fas fa-check"></i> Registrar</button></td>
-                        </tr>
-                        <tr>
-                            <td>${formatPairDisplay(match.b)}${winnerIconB}</td>
-                            <td><input type="number" min="0" id="fifth-s1-b" value="${s1_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="fifth-s2-b" value="${s2_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="fifth-s3-b" value="${s3_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="fifth-s4-b" value="${s4_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="fifth-s5-b" value="${s5_b}" class="set-input"></td>
-                        </tr>
-                    </tbody>
-                </table></div>`;
-        }
-    }
-
-    function handleRecordFifthPlace() {
-        const s1_a = document.getElementById('fifth-s1-a').value; const s1_b = document.getElementById('fifth-s1-b').value;
-        const s2_a = document.getElementById('fifth-s2-a').value; const s2_b = document.getElementById('fifth-s2-b').value;
-        const s3_a = document.getElementById('fifth-s3-a').value; const s3_b = document.getElementById('fifth-s3-b').value;
-        const s4_a = document.getElementById('fifth-s4-a').value; const s4_b = document.getElementById('fifth-s4-b').value;
-        const s5_a = document.getElementById('fifth-s5-a').value; const s5_b = document.getElementById('fifth-s5-b').value;
-
-        const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
-        const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
-        const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
-        const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
-        const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
-
-        recordFifthPlaceResult(s1, s2, s3, s4, s5); // Lógica en app.js
-        showNotification('Resultado de 5º/6º puesto registrado.');
-        handleGenerateFifthPlaceMatch();
-    }
-
-    function handleGenerateSeventhPlaceMatch() {
-        generateSeventhPlaceMatch(); // Lógica en app.js
-        const container = document.getElementById('seventhPlace');
-        container.innerHTML = '';
-
-        if (seventhPlaceMatch) {
-            const match = seventhPlaceMatch;
-            const sets = match.sets || [];
-            const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
-            const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
-            const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
-            const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
-            const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
-            const winnerIconA = match.winner === match.a.id ? ' <i class="fas fa-list-ol winner-icon"></i>' : '';
-            const winnerIconB = match.winner === match.b.id ? ' <i class="fas fa-list-ol winner-icon"></i>' : '';
-
-            container.innerHTML = `<div class="result-form-item knockout-match ${match.winner ? 'match-completed' : ''}">
-                <table class="result-table">
-                    <thead><tr><th>7º y 8º Puesto</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th><th></th></tr></thead>
-                    <tbody>
-                        <tr>
-                            <td>${formatPairDisplay(match.a)}${winnerIconA}</td>
-                            <td><input type="number" min="0" id="seventh-s1-a" value="${s1_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="seventh-s2-a" value="${s2_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="seventh-s3-a" value="${s3_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="seventh-s4-a" value="${s4_a}" class="set-input"></td>
-                            <td><input type="number" min="0" id="seventh-s5-a" value="${s5_a}" class="set-input"></td>
-                            <td rowspan="2"><button class="btn-secondary" onclick="handleRecordSeventhPlace()"><i class="fas fa-check"></i> Registrar</button></td>
-                        </tr>
-                        <tr>
-                            <td>${formatPairDisplay(match.b)}${winnerIconB}</td>
-                            <td><input type="number" min="0" id="seventh-s1-b" value="${s1_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="seventh-s2-b" value="${s2_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="seventh-s3-b" value="${s3_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="seventh-s4-b" value="${s4_b}" class="set-input"></td>
-                            <td><input type="number" min="0" id="seventh-s5-b" value="${s5_b}" class="set-input"></td>
-                        </tr>
-                    </tbody>
-                </table></div>`;
-        }
-    }
-
-    function handleRecordSeventhPlace() {
-        const s1_a = document.getElementById('seventh-s1-a').value; const s1_b = document.getElementById('seventh-s1-b').value;
-        const s2_a = document.getElementById('seventh-s2-a').value; const s2_b = document.getElementById('seventh-s2-b').value;
-        const s3_a = document.getElementById('seventh-s3-a').value; const s3_b = document.getElementById('seventh-s3-b').value;
-        const s4_a = document.getElementById('seventh-s4-a').value; const s4_b = document.getElementById('seventh-s4-b').value;
-        const s5_a = document.getElementById('seventh-s5-a').value; const s5_b = document.getElementById('seventh-s5-b').value;
-
-        const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
-        const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
-        const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
-        const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
-        const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
-
-        recordSeventhPlaceResult(s1, s2, s3, s4, s5); // Lógica en app.js
-        showNotification('Resultado de 7º/8º puesto registrado.');
-        handleGenerateSeventhPlaceMatch();
-    }
-
-    // --- Lógica de la Galería ---
-    let slideIndex = 0;
-    let imageFiles = []; // La lista se generará dinámicamente
-    let galleryInitialized = false; // Para evitar recargar las imágenes cada vez
-
-    // Función para comprobar si una imagen existe
-    function checkImage(url) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve(true);  // La imagen existe y se cargó
-            img.onerror = () => resolve(false); // La imagen no existe o hay un error
-            img.src = url;
-        });
-    }
-
-    async function initGallery() {
-        const slideContainer = document.querySelector('.carousel-slide');
-        if (!slideContainer) return;
-
-        // Si la galería ya se inicializó, no hacemos nada más
-        if (galleryInitialized) {
-            showSlide(slideIndex);
-            return;
-        }
-
-        slideContainer.innerHTML = '<p>Cargando galería...</p>';
-        imageFiles = []; // Reseteamos la lista
-
-        for (let i = 1; ; i++) {
-            const imageUrl = `img/img${i}.jpg`;
-            const exists = await checkImage(imageUrl);
-            if (exists) {
-                imageFiles.push(imageUrl); // Añadimos la URL completa
-            } else {
-                break; // Detenemos el bucle cuando una imagen no se encuentra
-            }
-        }
-
-        galleryInitialized = true; // Marcamos como inicializada
-
-        if (imageFiles.length > 0) {
-            slideContainer.innerHTML = imageFiles.map(url => `<img src="${url}" alt="Foto del torneo ${imageFiles.indexOf(url) + 1}">`).join('');
-            showSlide(0); // Mostramos la primera imagen
-        } else {
-            slideContainer.innerHTML = '<p>No se encontraron imágenes para la galería.</p>';
-        }
-    }
-
-    function moveSlide(n) {
-        showSlide(slideIndex += n);
-    }
-
-    function showSlide(n) {
-        const slides = document.querySelectorAll('.carousel-slide img');
-        if (slides.length === 0) return;
-
-        if (n >= slides.length) {
-            slideIndex = 0;
-        }
-        if (n < 0) {
-            slideIndex = slides.length - 1;
-        }
-
-        // Ocultar todas las imágenes
-        for (let i = 0; i < slides.length; i++) {
-            slides[i].style.display = 'none';
-        }
-
-        // Mostrar solo la imagen actual
-        slides[slideIndex].style.display = 'block';
-    }
-
-  </script>
+  <script src="js/app.js"></script>
+  <script src="js/ui.js"></script>
 
 </body>
 </html>
