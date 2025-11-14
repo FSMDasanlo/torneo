@@ -20,6 +20,8 @@ let matches = [];
 let semifinals = [];
 let finalMatch = null;
 let thirdPlace = null;
+let fifthPlaceMatch = null; // Nuevo: Partido 5º-6º puesto
+let seventhPlaceMatch = null; // Nuevo: Partido 7º-8º puesto
 let groupLimit = 4;
 let nextColorIndex = 0; // Nuevo: Índice para la paleta de colores
 
@@ -57,6 +59,8 @@ async function saveTournamentData() {
     semifinals,
     finalMatch,
     thirdPlace,
+    fifthPlaceMatch,
+    seventhPlaceMatch,
     groupLimit,
     nextColorIndex,
   };
@@ -87,6 +91,8 @@ function loadTournamentData() {
       semifinals = saved.semifinals || [];
       finalMatch = saved.finalMatch || null;
       thirdPlace = saved.thirdPlace || null;
+      fifthPlaceMatch = saved.fifthPlaceMatch || null;
+      seventhPlaceMatch = saved.seventhPlaceMatch || null;
       groupLimit = saved.groupLimit || 4;
       tournamentName = saved.name || "Torneo sin nombre"; // Cargar el nombre del torneo
       nextColorIndex = saved.nextColorIndex || 0; 
@@ -176,6 +182,8 @@ function deletePair(pairId) {
     semifinals = [];
     finalMatch = null;
     thirdPlace = null;
+    fifthPlaceMatch = null;
+    seventhPlaceMatch = null;
 
     saveTournamentData();
     updateGenerateMatchesButtonState(); // Actualiza el estado del botón al borrar una pareja
@@ -449,6 +457,58 @@ function recordThirdPlaceResult(set1, set2, set3, set4, set5) {
   thirdPlace.sets = [set1, set2, set3, set4, set5].filter(set => set !== null);
   thirdPlace.winner = calculateKnockoutWinner(thirdPlace);
   saveTournamentData();
+}
+
+// =======================================================
+// === PARTIDOS DE CONSOLACIÓN (5º-8º PUESTO) ===========
+// =======================================================
+
+// Enfrenta a los 3º de cada grupo
+function generateFifthPlaceMatch() {
+    if (fifthPlaceMatch) return; // No regenerar si ya existe
+    const standings = computeStandings();
+    // Asegúrate de que hay al menos 3 equipos en cada grupo
+    if (standings[1] && standings[1].length > 2 && standings[2] && standings[2].length > 2) {
+        const thirdG1 = standings[1][2].pair;
+        const thirdG2 = standings[2][2].pair;
+        fifthPlaceMatch = { id: 'fifth', a: thirdG1, b: thirdG2, sets: [], winner: null };
+        saveTournamentData();
+    } else {
+        alert('No hay suficientes equipos (3º de grupo) para generar este partido.');
+    }
+}
+
+// Registra el resultado del partido por el 5º puesto
+function recordFifthPlaceResult(s1, s2, s3) {
+    if (!fifthPlaceMatch) return;
+    const sets = [s1, s2, s3].filter(s => s); // Filtra sets nulos
+    fifthPlaceMatch.sets = sets;
+    fifthPlaceMatch.winner = calculateKnockoutWinner(fifthPlaceMatch);
+    saveTournamentData();
+}
+
+// Enfrenta a los 4º de cada grupo
+function generateSeventhPlaceMatch() {
+    if (seventhPlaceMatch) return; // No regenerar si ya existe
+    const standings = computeStandings();
+    // Asegúrate de que hay al menos 4 equipos en cada grupo
+    if (standings[1] && standings[1].length > 3 && standings[2] && standings[2].length > 3) {
+        const fourthG1 = standings[1][3].pair;
+        const fourthG2 = standings[2][3].pair;
+        seventhPlaceMatch = { id: 'seventh', a: fourthG1, b: fourthG2, sets: [], winner: null };
+        saveTournamentData();
+    } else {
+        alert('No hay suficientes equipos (4º de grupo) para generar este partido.');
+    }
+}
+
+// Registra el resultado del partido por el 7º puesto
+function recordSeventhPlaceResult(s1, s2, s3) {
+    if (!seventhPlaceMatch) return;
+    const sets = [s1, s2, s3].filter(s => s);
+    seventhPlaceMatch.sets = sets;
+    seventhPlaceMatch.winner = calculateKnockoutWinner(seventhPlaceMatch);
+    saveTournamentData();
 }
 
 // =======================================================

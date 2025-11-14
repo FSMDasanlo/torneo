@@ -99,6 +99,16 @@
         <button class="btn-primary" onclick="handleGenerateFinals()"><i class="fas fa-cogs"></i> Generar final y 3er puesto</button>
         <div id="finals" class="finals-view"></div>
       </div>
+      <div class="section card">
+        <h2><i class="fas fa-award"></i> 5º y 6º Puesto</h2>
+        <button class="btn-primary" onclick="handleGenerateFifthPlaceMatch()"><i class="fas fa-cogs"></i> Generar partido</button>
+        <div id="fifthPlace" class="finals-view"></div>
+      </div>
+      <div class="section card">
+        <h2><i class="fas fa-list-ol"></i> 7º y 8º Puesto</h2>
+        <button class="btn-primary" onclick="handleGenerateSeventhPlaceMatch()"><i class="fas fa-cogs"></i> Generar partido</button>
+        <div id="seventhPlace" class="finals-view"></div>
+      </div>
     </div>
 
     <div id="tab-galeria" class="tab-content card">
@@ -187,6 +197,12 @@
           }
           if (finalMatch || thirdPlace) {
               handleGenerateFinals();
+          }
+          if (fifthPlaceMatch) {
+              handleGenerateFifthPlaceMatch();
+          }
+          if (seventhPlaceMatch) {
+              handleGenerateSeventhPlaceMatch();
           }
       }
       if (tabId === 'tab-clasificacion') {
@@ -716,6 +732,128 @@
       recordThirdPlaceResult(s1,s2,s3,s4,s5);
       showNotification('Resultado de 3er puesto registrado.');
       handleGenerateFinals(); 
+    }
+
+    // --- PARTIDOS POR 5º Y 7º PUESTO ---
+
+    function handleGenerateFifthPlaceMatch() {
+        generateFifthPlaceMatch(); // Lógica en app.js
+        const container = document.getElementById('fifthPlace');
+        container.innerHTML = '';
+
+        if (fifthPlaceMatch) {
+            const match = fifthPlaceMatch;
+            const sets = match.sets || [];
+            const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
+            const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
+            const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
+            const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
+            const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
+            const winnerIconA = match.winner === match.a.id ? ' <i class="fas fa-award winner-icon"></i>' : '';
+            const winnerIconB = match.winner === match.b.id ? ' <i class="fas fa-award winner-icon"></i>' : '';
+
+            container.innerHTML = `<div class="result-form-item knockout-match ${match.winner ? 'match-completed' : ''}">
+                <table class="result-table">
+                    <thead><tr><th>5º y 6º Puesto</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th><th></th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>${formatPairDisplay(match.a)}${winnerIconA}</td>
+                            <td><input type="number" min="0" id="fifth-s1-a" value="${s1_a}" class="set-input"></td>
+                            <td><input type="number" min="0" id="fifth-s2-a" value="${s2_a}" class="set-input"></td>
+                            <td><input type="number" min="0" id="fifth-s3-a" value="${s3_a}" class="set-input"></td>
+                            <td><input type="number" min="0" id="fifth-s4-a" value="${s4_a}" class="set-input"></td>
+                            <td><input type="number" min="0" id="fifth-s5-a" value="${s5_a}" class="set-input"></td>
+                            <td rowspan="2"><button class="btn-secondary" onclick="handleRecordFifthPlace()"><i class="fas fa-check"></i> Registrar</button></td>
+                        </tr>
+                        <tr>
+                            <td>${formatPairDisplay(match.b)}${winnerIconB}</td>
+                            <td><input type="number" min="0" id="fifth-s1-b" value="${s1_b}" class="set-input"></td>
+                            <td><input type="number" min="0" id="fifth-s2-b" value="${s2_b}" class="set-input"></td>
+                            <td><input type="number" min="0" id="fifth-s3-b" value="${s3_b}" class="set-input"></td>
+                            <td><input type="number" min="0" id="fifth-s4-b" value="${s4_b}" class="set-input"></td>
+                            <td><input type="number" min="0" id="fifth-s5-b" value="${s5_b}" class="set-input"></td>
+                        </tr>
+                    </tbody>
+                </table></div>`;
+        }
+    }
+
+    function handleRecordFifthPlace() {
+        const s1_a = document.getElementById('fifth-s1-a').value; const s1_b = document.getElementById('fifth-s1-b').value;
+        const s2_a = document.getElementById('fifth-s2-a').value; const s2_b = document.getElementById('fifth-s2-b').value;
+        const s3_a = document.getElementById('fifth-s3-a').value; const s3_b = document.getElementById('fifth-s3-b').value;
+        const s4_a = document.getElementById('fifth-s4-a').value; const s4_b = document.getElementById('fifth-s4-b').value;
+        const s5_a = document.getElementById('fifth-s5-a').value; const s5_b = document.getElementById('fifth-s5-b').value;
+
+        const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
+        const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
+        const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
+        const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
+        const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
+
+        recordFifthPlaceResult(s1, s2, s3, s4, s5); // Lógica en app.js
+        showNotification('Resultado de 5º/6º puesto registrado.');
+        handleGenerateFifthPlaceMatch();
+    }
+
+    function handleGenerateSeventhPlaceMatch() {
+        generateSeventhPlaceMatch(); // Lógica en app.js
+        const container = document.getElementById('seventhPlace');
+        container.innerHTML = '';
+
+        if (seventhPlaceMatch) {
+            const match = seventhPlaceMatch;
+            const sets = match.sets || [];
+            const s1_a = sets[0] ? sets[0].a : ''; const s1_b = sets[0] ? sets[0].b : '';
+            const s2_a = sets[1] ? sets[1].a : ''; const s2_b = sets[1] ? sets[1].b : '';
+            const s3_a = sets[2] ? sets[2].a : ''; const s3_b = sets[2] ? sets[2].b : '';
+            const s4_a = sets[3] ? sets[3].a : ''; const s4_b = sets[3] ? sets[3].b : '';
+            const s5_a = sets[4] ? sets[4].a : ''; const s5_b = sets[4] ? sets[4].b : '';
+            const winnerIconA = match.winner === match.a.id ? ' <i class="fas fa-list-ol winner-icon"></i>' : '';
+            const winnerIconB = match.winner === match.b.id ? ' <i class="fas fa-list-ol winner-icon"></i>' : '';
+
+            container.innerHTML = `<div class="result-form-item knockout-match ${match.winner ? 'match-completed' : ''}">
+                <table class="result-table">
+                    <thead><tr><th>7º y 8º Puesto</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th><th></th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>${formatPairDisplay(match.a)}${winnerIconA}</td>
+                            <td><input type="number" min="0" id="seventh-s1-a" value="${s1_a}" class="set-input"></td>
+                            <td><input type="number" min="0" id="seventh-s2-a" value="${s2_a}" class="set-input"></td>
+                            <td><input type="number" min="0" id="seventh-s3-a" value="${s3_a}" class="set-input"></td>
+                            <td><input type="number" min="0" id="seventh-s4-a" value="${s4_a}" class="set-input"></td>
+                            <td><input type="number" min="0" id="seventh-s5-a" value="${s5_a}" class="set-input"></td>
+                            <td rowspan="2"><button class="btn-secondary" onclick="handleRecordSeventhPlace()"><i class="fas fa-check"></i> Registrar</button></td>
+                        </tr>
+                        <tr>
+                            <td>${formatPairDisplay(match.b)}${winnerIconB}</td>
+                            <td><input type="number" min="0" id="seventh-s1-b" value="${s1_b}" class="set-input"></td>
+                            <td><input type="number" min="0" id="seventh-s2-b" value="${s2_b}" class="set-input"></td>
+                            <td><input type="number" min="0" id="seventh-s3-b" value="${s3_b}" class="set-input"></td>
+                            <td><input type="number" min="0" id="seventh-s4-b" value="${s4_b}" class="set-input"></td>
+                            <td><input type="number" min="0" id="seventh-s5-b" value="${s5_b}" class="set-input"></td>
+                        </tr>
+                    </tbody>
+                </table></div>`;
+        }
+    }
+
+    function handleRecordSeventhPlace() {
+        const s1_a = document.getElementById('seventh-s1-a').value; const s1_b = document.getElementById('seventh-s1-b').value;
+        const s2_a = document.getElementById('seventh-s2-a').value; const s2_b = document.getElementById('seventh-s2-b').value;
+        const s3_a = document.getElementById('seventh-s3-a').value; const s3_b = document.getElementById('seventh-s3-b').value;
+        const s4_a = document.getElementById('seventh-s4-a').value; const s4_b = document.getElementById('seventh-s4-b').value;
+        const s5_a = document.getElementById('seventh-s5-a').value; const s5_b = document.getElementById('seventh-s5-b').value;
+
+        const s1 = (s1_a !== '' && s1_b !== '') ? { a: parseInt(s1_a), b: parseInt(s1_b) } : null;
+        const s2 = (s2_a !== '' && s2_b !== '') ? { a: parseInt(s2_a), b: parseInt(s2_b) } : null;
+        const s3 = (s3_a !== '' && s3_b !== '') ? { a: parseInt(s3_a), b: parseInt(s3_b) } : null;
+        const s4 = (s4_a !== '' && s4_b !== '') ? { a: parseInt(s4_a), b: parseInt(s4_b) } : null;
+        const s5 = (s5_a !== '' && s5_b !== '') ? { a: parseInt(s5_a), b: parseInt(s5_b) } : null;
+
+        recordSeventhPlaceResult(s1, s2, s3, s4, s5); // Lógica en app.js
+        showNotification('Resultado de 7º/8º puesto registrado.');
+        handleGenerateSeventhPlaceMatch();
     }
 
     // --- Lógica de la Galería ---

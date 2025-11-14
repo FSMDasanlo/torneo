@@ -37,6 +37,31 @@
             color: #6c757d;
             font-size: 0.9em;
         }
+        .tournament-info {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        .tournament-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9em;
+            margin-right: 20px; /* Espacio antes de los botones de acción */
+        }
+        .tournament-status .status-label {
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: white;
+        }
+        .tournament-status .in-progress { background-color: #3498db; } /* Azul */
+        .tournament-status .upcoming { background-color: #f39c12; } /* Naranja */
+        .tournament-status .finished { background-color: #2ecc71; } /* Verde */
+        .tournament-status .winner, .tournament-status .runner-up {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
         .btn-delete-small {
             background: none;
             border: none;
@@ -113,6 +138,15 @@
     }
 
     async function deleteTournament(id, name) {
+        const password = prompt("Para realizar esta acción, por favor introduce la contraseña:");
+        if (password === null) return; // El usuario pulsó "Cancelar"
+
+        if (password !== "Traid1959") {
+            alert("Contraseña incorrecta. La operación ha sido cancelada.");
+            return;
+        }
+
+        // Si la contraseña es correcta, se continúa con la confirmación
         if (confirm(`¿Estás seguro de que quieres borrar el torneo "${name}"? Esta acción es permanente.`)) {
             try {
                 await db.collection('tournaments').doc(id).delete();
@@ -125,6 +159,15 @@
     }
 
     async function copyTournament(idToCopy, originalName) {
+        const password = prompt("Para realizar esta acción, por favor introduce la contraseña:");
+        if (password === null) return; // El usuario pulsó "Cancelar"
+
+        if (password !== "Traid1959") {
+            alert("Contraseña incorrecta. La operación ha sido cancelada.");
+            return;
+        }
+
+        // Si la contraseña es correcta, se continúa con la copia
         const newName = prompt(`Introduce el nombre para la copia del torneo:`, `Copia de ${originalName}`);
         if (!newName || newName.trim() === '') {
             // El usuario canceló o no introdujo nombre
@@ -176,12 +219,47 @@
                 const tournament = doc.data();
                 const tournamentName = tournament.name || 'Torneo sin nombre';
                 const date = tournament.createdAt ? new Date(tournament.createdAt.seconds * 1000).toLocaleDateString() : 'Sin fecha';
+
+                let statusHtml = '';
+                // 1. Comprobar si el torneo ha finalizado
+                if (tournament.finalMatch && tournament.finalMatch.winner) {
+                    const final = tournament.finalMatch;
+                    const winnerPair = final.a.id === final.winner ? final.a : final.b;
+                    const runnerUpPair = final.a.id !== final.winner ? final.a : final.b;
+
+                    const winnerName = winnerPair.players.join(' - ');
+                    const runnerUpName = runnerUpPair.players.join(' - ');
+
+                    statusHtml = `
+                        <div class="tournament-status">
+                            <span class="status-label finished">Finalizado</span>
+                            <span class="winner" title="Ganadores"><i class="fas fa-crown"></i> ${winnerName}</span>
+                            <span class="runner-up" title="Subcampeones"><i class="fas fa-medal"></i> ${runnerUpName}</span>
+                        </div>
+                    `;
+                // 2. Comprobar si está "En juego" (si hay algún resultado en fase de grupos)
+                } else if (tournament.matches && tournament.matches.some(m => m.sets && m.sets.length > 0)) {
+                    statusHtml = `
+                        <div class="tournament-status">
+                            <span class="status-label in-progress">En juego</span>
+                        </div>
+                    `;
+                // 3. Si no, está "Por iniciar"
+                } else {
+                    statusHtml = `
+                        <div class="tournament-status">
+                            <span class="status-label upcoming">Próximamente</span>
+                        </div>
+                    `;
+                }
+
                 listContainer.innerHTML += `
                     <div class="tournament-list-item">
-                        <div onclick="loadTournament('${doc.id}')" style="flex-grow: 1;">
+                        <div class="tournament-info" onclick="loadTournament('${doc.id}')">
                             <div class="tournament-name">${tournamentName}</div>
                             <div class="tournament-date">Creado el: ${date}</div>
                         </div>
+                        ${statusHtml}
                         <div class="actions">
                             <button class="btn-copy-small" onclick="event.stopPropagation(); copyTournament('${doc.id}', '${tournamentName.replace(/'/g, "\\'")}')" title="Copiar torneo">
                                 <i class="fas fa-copy"></i>
