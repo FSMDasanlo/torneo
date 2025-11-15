@@ -203,6 +203,12 @@ input:focus, select:focus {
     text-align: left; /* Mantiene el título a la izquierda */
 }
 
+/* CORRECCIÓN PARA MÓVIL: Asegurar que el item de pareja ocupe todo el ancho y alinee a la izquierda */
+.match-item.pair-item {
+    display: flex; /* Asegura que sea un contenedor flex */
+    width: 100%;   /* Ocupa todo el ancho del contenedor padre */
+    text-align: left; /* Alinea el contenido a la izquierda */
+}
 
 /* --- NUEVO: Estilos para selector de modo --- */
 .section-mode-selector {
