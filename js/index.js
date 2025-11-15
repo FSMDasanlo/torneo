@@ -54,7 +54,7 @@ async function deleteTournament(id, name) {
     }
 }
 
-async function copyTournament(idToCopy, originalName) {
+function copyTournament(idToCopy, originalName) {
     const password = prompt("Para realizar esta acción, por favor introduce la contraseña:");
     if (password === null) return; // El usuario pulsó "Cancelar"
 
@@ -62,19 +62,26 @@ async function copyTournament(idToCopy, originalName) {
         alert("Contraseña incorrecta. La operación ha sido cancelada.");
         return;
     }
+    
+    // Si la contraseña es correcta, mostramos el modal
+    document.getElementById('copyTournamentId').value = idToCopy;
+    document.getElementById('copyTournamentName').value = `Copia de ${originalName}`;
+    document.getElementById('copyTournamentModal').style.display = 'block';
+}
 
-    // Si la contraseña es correcta, se continúa con la copia
-    const newName = prompt(`Introduce el nombre para la copia del torneo:`, `Copia de ${originalName}`);
-    if (!newName || newName.trim() === '') {
-        // El usuario canceló o no introdujo nombre
-        return;
-    }
-
+async function performCopy() {
     try {
-        // 1. Leer los datos del torneo original
+        const idToCopy = document.getElementById('copyTournamentId').value;
+        const newName = document.getElementById('copyTournamentName').value.trim();
+        const copyOption = document.querySelector('input[name="copyOption"]:checked').value;
+
+        if (!newName) {
+            alert("Debes introducir un nombre para el torneo.");
+            return;
+        }
+
         const docRef = db.collection('tournaments').doc(idToCopy);
         const doc = await docRef.get();
-
         if (!doc.exists) {
             alert('Error: El torneo que intentas copiar no existe.');
             return;
@@ -82,23 +89,38 @@ async function copyTournament(idToCopy, originalName) {
 
         const originalData = doc.data();
 
-        // 2. Crear el nuevo objeto de torneo, copiando solo lo que nos interesa
+        const copyResults = (copyOption === 'full_copy');
+
         const newData = {
             name: newName.trim(),
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            groups: originalData.groups || { 1: [], 2: [] }, // Copia las parejas y grupos
-            groupLimit: originalData.groupLimit || 4,       // Copia el límite
-            nextColorIndex: originalData.nextColorIndex || 0, // Copia el índice de color
-            matches: [], semifinals: [], finalMatch: null, thirdPlace: null // RESULTADOS LIMPIOS
+            
+            // --- Datos que se copian siempre ---
+            groups: originalData.groups || { 1: [], 2: [] },
+            groupLimit: originalData.groupLimit || 4,
+            nextColorIndex: originalData.nextColorIndex || 0,
+            tournamentMode: originalData.tournamentMode || 'directed',
+            drawPool: originalData.drawPool || [], // Copia la bolsa de sorteo por si acaso
+
+            // --- Datos que se copian condicionalmente ---
+            matches: copyResults ? (originalData.matches || []) : [],
+            semifinals: copyResults ? (originalData.semifinals || []) : [],
+            finalMatch: copyResults ? (originalData.finalMatch || null) : null,
+            thirdPlace: copyResults ? (originalData.thirdPlace || null) : null,
+            fifthPlaceMatch: copyResults ? (originalData.fifthPlaceMatch || null) : null,
+            seventhPlaceMatch: copyResults ? (originalData.seventhPlaceMatch || null) : null
         };
 
-        // 3. Crear el nuevo torneo y redirigir
         const newDocRef = await db.collection('tournaments').add(newData);
-        window.location.href = `torneo.html?id=${newDocRef.id}`;
+        
+        alert(`Torneo copiado con éxito. El nuevo torneo es "${newData.name}".`);
+        document.getElementById('copyTournamentModal').style.display = 'none';
+        window.location.reload();
 
     } catch (error) {
         console.error("Error al copiar el torneo: ", error);
         alert("Hubo un error al intentar copiar el torneo.");
+        document.getElementById('copyTournamentModal').style.display = 'none';
     }
 }
 
@@ -113,6 +135,19 @@ function initializeTournamentList() {
     nameInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             createNewTournament();
+        }
+    });
+
+    // Eventos del modal de copia
+    const modal = document.getElementById('copyTournamentModal');
+    const closeBtn = modal.querySelector('.close-button');
+    const confirmCopyBtn = document.getElementById('confirmCopyBtn');
+
+    closeBtn.onclick = () => modal.style.display = 'none';
+    confirmCopyBtn.onclick = performCopy;
+    window.addEventListener('click', (event) => {
+        if (event.target == modal) {
+            modal.style.display = 'none';
         }
     });
 

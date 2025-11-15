@@ -116,22 +116,14 @@ function loadTournamentData() {
       if (typeof renderCurrentPairs === 'function') {
         const standings = computeStandings(); // Calculamos la clasificación una vez
 
-        // --- INICIO DE LA MODIFICACIÓN ---
-        // Generar partidos de consolación automáticamente si no existen y hay equipos suficientes
-        if (!fifthPlaceMatch && standings[1]?.length > 2 && standings[2]?.length > 2) {
-            generateFifthPlaceMatch(); // Esto guardará el partido en Firestore y el listener lo detectará
-        }
-        if (!seventhPlaceMatch && standings[1]?.length > 3 && standings[2]?.length > 3) {
-            generateSeventhPlaceMatch(); // Igual para el 7º puesto
-        }
-        // --- FIN DE LA MODIFICACIÓN ---
-
         updateTournamentHeader(tournamentName);
         renderCurrentPairs();
         renderMatchesList();
         renderResultForms();
         handleShowStandings(standings); // Pasamos la clasificación ya calculada
-        renderSemifinals(calculateCurrentSemifinals(standings)); // Pinta las semis dinámicamente
+        // Si ya hay semifinales guardadas, las renderiza. Si no, calcula y muestra las teóricas.
+        const semisToRender = semifinals.length > 0 ? semifinals : calculateCurrentSemifinals(standings);
+        renderSemifinals(semisToRender);
         renderFinals();
         renderFifthPlaceMatch();
         renderSeventhPlaceMatch();
@@ -503,8 +495,10 @@ function calculateKnockoutWinner(match) {
     winsB = 0;
   for (const set of match.sets) { // Ahora 'set' es un objeto {a, b}
     if (set && typeof set.a === 'number' && typeof set.b === 'number') {
-      if (set.a > set.b) winsA++;
-      else if (set.b > set.a) winsB++;
+      // Solo se cuenta como set ganado si no hay empate.
+      // Esto evita que los sets vacíos {a:0, b:0} se cuenten.
+      if (set.a > set.b) winsA++; 
+      if (set.b > set.a) winsB++;
     }
   }
   if (winsA > winsB) return match.a.id;
@@ -514,7 +508,8 @@ function calculateKnockoutWinner(match) {
 
 // Registrar semifinal
 function recordSemiResult(semiId, set1, set2, set3, set4, set5) {
-  const s = semifinals.find((x) => x.id === semiId);
+  // Convertimos el semiId (que viene como string desde la UI) a número para la comparación estricta.
+  const s = semifinals.find((x) => x.id === parseFloat(semiId));
   if (s) {
     s.sets = [set1, set2, set3, set4, set5];
     s.winner = calculateKnockoutWinner(s);
@@ -569,7 +564,6 @@ function recordThirdPlaceResult(set1, set2, set3, set4, set5) {
 
 // Enfrenta a los 3º de cada grupo
 function generateFifthPlaceMatch() {
-    if (fifthPlaceMatch) return; // No regenerar si ya existe
     const standings = computeStandings();
     // Asegúrate de que hay al menos 3 equipos en cada grupo
     if (standings[1] && standings[1].length > 2 && standings[2] && standings[2].length > 2) {
@@ -592,7 +586,6 @@ function recordFifthPlaceResult(s1, s2, s3, s4, s5) {
 
 // Enfrenta a los 4º de cada grupo
 function generateSeventhPlaceMatch() {
-    if (seventhPlaceMatch) return; // No regenerar si ya existe
     const standings = computeStandings();
     // Asegúrate de que hay al menos 4 equipos en cada grupo
     if (standings[1] && standings[1].length > 3 && standings[2] && standings[2].length > 3) {

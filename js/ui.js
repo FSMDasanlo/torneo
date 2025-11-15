@@ -64,18 +64,16 @@ function handleModeChange() {
     // Mostrar el panel correspondiente
     document.getElementById(`mode-${mode}-inputs`).style.display = 'flex';
 
-    // Si el modo ha cambiado, lo guardamos. Pedimos confirmación si hay datos.
+    // SOLO actuar si el modo seleccionado es REALMENTE diferente al actual.
     if (mode !== tournamentMode) {
+        // Si hay datos en el torneo, es una acción destructiva, así que pedimos confirmación.
         if (groups[1].length > 0 || groups[2].length > 0 || drawPool.length > 0) {
             if (confirm("Cambiar de modo borrará las parejas y jugadores actuales. ¿Continuar?")) {
                 setTournamentMode(mode);
             } else {
                 // Si cancela, vuelve a seleccionar el radio button anterior
                 document.querySelector(`input[name="tournamentMode"][value="${tournamentMode}"]`).checked = true;
-                handleModeChange(); // Vuelve a llamar para restaurar la UI
             }
-        } else {
-            setTournamentMode(mode);
         }
     }
 }
@@ -420,6 +418,9 @@ function renderKnockoutMatch(containerId, matchData, title, iconClass, matchIdPr
         const winnerIconA = match.winner === match.a.id ? ` <i class="fas ${iconClass} winner-icon"></i>` : '';
         const winnerIconB = match.winner === match.b.id ? ` <i class="fas ${iconClass} winner-icon"></i>` : '';
 
+        const hasResult = sets.some(s => s && (s.a > 0 || s.b > 0));
+        const buttonClass = hasResult ? 'btn-success' : 'btn-secondary';
+
         html = `
             <div class="result-form-item knockout-match ${match.winner ? 'match-completed' : ''}">
                 ${title ? `<h4><i class="fas ${iconClass}"></i> ${title}</h4>` : ''}
@@ -434,12 +435,12 @@ function renderKnockoutMatch(containerId, matchData, title, iconClass, matchIdPr
                     <tbody>
                         <tr>
                             <td>${formatPairDisplay(match.a)}${winnerIconA}</td>
-                            ${s_vals.map((s, i) => `<td><input type="number" min="0" id="${matchIdPrefix}-s${i+1}-a-${id}" value="${s.a}" class="set-input"></td>`).join('')}
-                            <td rowspan="2"><button class="btn-secondary" onclick="handleRecordKnockoutResult('${matchIdPrefix}', '${id}')"><i class="fas fa-check"></i> Registrar</button></td>
+                            ${s_vals.map((s, i) => `<td><input type="number" min="0" id="${matchIdPrefix}-s${i+1}-a-${match.id}" value="${s.a}" class="set-input"></td>`).join('')}
+                            <td rowspan="2"><button class="${buttonClass}" onclick="handleRecordKnockoutResult('${matchIdPrefix}', '${match.id}')"><i class="fas fa-check"></i> Registrar</button></td>
                         </tr>
                         <tr>
                             <td>${formatPairDisplay(match.b)}${winnerIconB}</td>
-                            ${s_vals.map((s, i) => `<td><input type="number" min="0" id="${matchIdPrefix}-s${i+1}-b-${id}" value="${s.b}" class="set-input"></td>`).join('')}
+                            ${s_vals.map((s, i) => `<td><input type="number" min="0" id="${matchIdPrefix}-s${i+1}-b-${match.id}" value="${s.b}" class="set-input"></td>`).join('')}
                         </tr>
                     </tbody>
                 </table>
@@ -464,8 +465,9 @@ function renderSemifinals(semisToRender) {
     const generateBtn = document.getElementById('generateSemifinalsBtn');
     const currentSemis = semisToRender || []; // Usa las semis pasadas o un array vacío
 
-    // El botón siempre está activo para poder (re)generar.
-    generateBtn.disabled = currentSemis.length === 0;
+    // El botón se activa si hay semifinales teóricas para guardar.
+    // Una vez guardadas, se mantiene activo para poder actualizarlas.
+    generateBtn.disabled = false;
     generateBtn.innerHTML = '<i class="fas fa-cogs"></i> Guardar/Actualizar Semifinales';
 
     let html = '';
@@ -483,11 +485,10 @@ function handleGenerateFinals(){
 
 function renderFinals() {
     const generateBtn = document.getElementById('generateFinalAndThirdPlaceBtn');
-    if (finalMatch || thirdPlace) {
-        generateBtn.disabled = true;
-    } else {
-        generateBtn.disabled = false;
-    }
+    // La condición correcta: el botón se activa solo si las 2 semis tienen ganador y la final aún no está creada.
+    const semisCompleted = semifinals.length === 2 && semifinals.every(s => s.winner);
+    generateBtn.disabled = !semisCompleted || finalMatch;
+
     // Generamos el HTML de ambos y lo juntamos antes de pintar
     const finalContainer = document.getElementById('finals');
     if(finalContainer) {
@@ -503,9 +504,10 @@ function handleGenerateFifthPlaceMatch() {
 
 function renderFifthPlaceMatch() {
     const generateBtn = document.getElementById('generateFifthPlaceBtn');
-    if (fifthPlaceMatch) {
+    // Deshabilitar solo si el partido ya tiene un ganador.
+    if (fifthPlaceMatch && fifthPlaceMatch.winner) {
         generateBtn.disabled = true;
-        generateBtn.innerHTML = '<i class="fas fa-check"></i> Partido Creado';
+        generateBtn.innerHTML = '<i class="fas fa-check"></i> Partido Finalizado';
     } else {
         generateBtn.disabled = false;
         generateBtn.innerHTML = '<i class="fas fa-cogs"></i> Generar partido';
@@ -519,9 +521,10 @@ function handleGenerateSeventhPlaceMatch() {
 
 function renderSeventhPlaceMatch() {
     const generateBtn = document.getElementById('generateSeventhPlaceBtn');
-    if (seventhPlaceMatch) {
+    // Deshabilitar solo si el partido ya tiene un ganador.
+    if (seventhPlaceMatch && seventhPlaceMatch.winner) {
         generateBtn.disabled = true;
-        generateBtn.innerHTML = '<i class="fas fa-check"></i> Partido Creado';
+        generateBtn.innerHTML = '<i class="fas fa-check"></i> Partido Finalizado';
     } else {
         generateBtn.disabled = false;
         generateBtn.innerHTML = '<i class="fas fa-cogs"></i> Generar partido';
@@ -540,7 +543,7 @@ function handleRecordKnockoutResult(matchType, id) {
             if (s_a !== '' && s_b !== '') {
                 sets.push({ a: parseInt(s_a), b: parseInt(s_b) });
             } else {
-                sets.push(null);
+                sets.push({ a: 0, b: 0 }); // CORRECCIÓN: Enviar objeto vacío en lugar de null
             }
         }
     }
