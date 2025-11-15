@@ -196,6 +196,8 @@ input:focus, select:focus {
     padding: 15px;
     margin-bottom: 20px;
     background-color: #fdfdfd;
+    max-width: 600px; /* Ancho máximo para que no se estire demasiado en escritorio */
+    margin-left: auto; margin-right: auto; /* Centra el contenedor */
     text-align: center; /* Centra los elementos inline/inline-block/inline-flex hijos */
 }
 
