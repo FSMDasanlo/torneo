@@ -507,9 +507,13 @@ input:focus, select:focus {
   }
   /* Ajuste para el listado de parejas en móvil */
   .pair-item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
+      /* Revertimos al comportamiento flex por defecto (fila) para mantener todo en una línea */
+      flex-wrap: nowrap; /* Evita que los botones salten a la línea de abajo */
+  }
+  .pair-item span {
+      white-space: nowrap; /* Evita que el nombre de la pareja se parta en varias líneas */
+      overflow: hidden; /* Oculta el texto que se desborda */
+      text-overflow: ellipsis; /* Añade "..." al final del texto cortado */
   }
   .pair-actions {
       align-self: flex-end;
