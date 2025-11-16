@@ -10,19 +10,24 @@
   <style>
     /* --- MEJORAS PARA VISTA MÓVIL --- */
     .pair-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px; /* Espacio entre el nombre y los botones */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px; /* Espacio entre el nombre y los botones */
     }
 
     .pair-item > span {
-      flex-grow: 1; /* Permite que el nombre ocupe el espacio disponible */
-      overflow: hidden; /* Evita que el texto se desborde */
+        flex-grow: 1; /* Permite que el nombre ocupe el espacio disponible */
+        overflow: hidden; /* Evita que el texto se desborde si es muy largo */
+        text-overflow: ellipsis; /* Añade "..." si el texto no cabe */
     }
 
     .pair-item .pair-box {
-      white-space: nowrap; /* Evita que el nombre de la pareja se parta en dos líneas */
+        white-space: nowrap; /* Evita que el nombre de la pareja se parta en dos líneas */
+    }
+
+    .pair-item .pair-actions {
+        flex-shrink: 0; /* Evita que el contenedor de botones se encoja */
     }
   </style>
 </head>
@@ -163,6 +168,15 @@
 
     <div id="tab-galeria" class="tab-content card">
       <h2><i class="fas fa-images"></i> Galería del Torneo</h2>
+      <!-- Formulario para subir imágenes -->
+      <div class="upload-section" style="margin-bottom: 20px;">
+          <input type="file" id="imageUpload" accept="image/*" multiple style="margin-bottom: 10px;">
+          <button id="uploadImagesBtn" class="btn-primary"><i class="fas fa-upload"></i> Subir Imágenes</button>
+          <div id="uploadProgressContainer" style="display: none; margin-top: 10px;">
+              <p>Subiendo...</p>
+              <progress id="uploadProgress" value="0" max="100" style="width: 100%;"></progress>
+          </div>
+      </div>
       <div class="carousel-container">
         <div class="carousel-slide">
           <!-- Las imágenes se cargarán aquí dinámicamente -->
@@ -199,6 +213,7 @@
   <!-- Scripts de Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
   <!-- Inicialización de Firebase -->
   <script>
