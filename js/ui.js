@@ -34,10 +34,6 @@ function openTab(evt, tabId) {
   evt.currentTarget.className += " active";
 
   // La lógica de renderizado principal se llama desde onSnapshot en app.js
-  // Aquí solo manejamos casos especiales que no dependen de los datos principales
-  if (tabId === 'tab-galeria') {
-      initGallery();
-  }
 }
 
 // --- Funciones de Parejas (Gestión de UI) ---
@@ -574,45 +570,16 @@ function handleRecordKnockoutResult(matchType, id) {
 
 // --- Lógica de la Galería ---
 let slideIndex = 0;
-let imageFiles = [];
-let galleryInitialized = false;
 
-function checkImage(url) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve(true);
-        img.onerror = () => resolve(false);
-        img.src = url;
-    });
-}
-
-async function initGallery() {
+function renderGallery(imageUrls = []) {
     const slideContainer = document.querySelector('.carousel-slide');
-    if (!slideContainer || galleryInitialized) {
-        if (galleryInitialized) showSlide(slideIndex);
-        return;
-    }
+    if (!slideContainer) return;
 
-    slideContainer.innerHTML = '<p>Cargando galería...</p>';
-    imageFiles = [];
-
-    for (let i = 1; ; i++) {
-        const imageUrl = `img/img${i}.jpg`;
-        const exists = await checkImage(imageUrl);
-        if (exists) {
-            imageFiles.push(imageUrl);
-        } else {
-            break;
-        }
-    }
-
-    galleryInitialized = true;
-
-    if (imageFiles.length > 0) {
-        slideContainer.innerHTML = imageFiles.map(url => `<img src="${url}" alt="Foto del torneo">`).join('');
+    if (imageUrls.length > 0) {
+        slideContainer.innerHTML = imageUrls.map(url => `<img src="${url}" alt="Foto del torneo">`).join('');
         showSlide(0);
     } else {
-        slideContainer.innerHTML = '<p>No se encontraron imágenes para la galería.</p>';
+        slideContainer.innerHTML = '<p>Aún no hay imágenes en la galería. ¡Sube la primera!</p>';
     }
 }
 
@@ -641,6 +608,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addPairBtn').addEventListener('click', handleAddPair);
     document.getElementById('addSemiPairBtn').addEventListener('click', handleAddSemiPair);
     document.getElementById('addOpenPlayerBtn').addEventListener('click', handleAddOpenPlayer);
+
+    // --- Eventos para la galería ---
+    const uploadImagesBtn = document.getElementById('uploadImagesBtn');
+    const imageUploadInput = document.getElementById('imageUpload');
+    if (uploadImagesBtn) {
+        uploadImagesBtn.addEventListener('click', () => {
+            const files = imageUploadInput.files;
+            if (!files.length) {
+                showNotification('Por favor, selecciona al menos una imagen.', 'error');
+                return;
+            }
+            // La función uploadImages y la variable currentTournamentId están en app.js
+            uploadImages(files, currentTournamentId);
+        });
+    }
 
     // --- NUEVO: Eventos para el modal de edición ---
     const modal = document.getElementById('editPairModal');

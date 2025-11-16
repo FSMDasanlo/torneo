@@ -4,6 +4,7 @@
 // === CONFIGURACIÓN DINÁMICA DE FIREBASE ================
 // =======================================================
 const db = firebase.firestore();
+const storage = firebase.storage(); // Referencia al servicio de Firebase Storage
 
 // Función para obtener el ID del torneo desde la URL (ej: torneo.html?id=XXXX)
 function getTournamentIdFromURL() {
@@ -11,7 +12,7 @@ function getTournamentIdFromURL() {
     return params.get('id');
 }
 
-const tournamentId = getTournamentIdFromURL();
+const currentTournamentId = getTournamentIdFromURL(); // Renombrado para mayor claridad
 let tournamentDocRef; // La referencia ahora es variable
 let tournamentName = "Cargando..."; // Variable para el nombre del torneo
 
@@ -81,12 +82,12 @@ async function saveTournamentData() {
 
 // Carga los datos y escucha cambios en tiempo real desde Firestore
 function loadTournamentData() {
-  if (!tournamentId) {
+  if (!currentTournamentId) {
     alert("Error: No se ha especificado un ID de torneo. Volviendo a la página de selección.");
     window.location.href = 'index.html';
     return;
   }
-  tournamentDocRef = db.collection("tournaments").doc(tournamentId);
+  tournamentDocRef = db.collection("tournaments").doc(currentTournamentId);
   tournamentDocRef.onSnapshot((docSnap) => {
     if (docSnap.exists) {
       const saved = docSnap.data();
@@ -102,6 +103,7 @@ function loadTournamentData() {
       nextColorIndex = saved.nextColorIndex || 0; 
       tournamentMode = saved.tournamentMode || 'directed';
       drawPool = saved.drawPool || [];
+      const galleryImages = saved.gallery || []; // Cargar las imágenes de la galería
 
       console.log("Datos cargados/actualizados desde Firestore.");
 
@@ -127,6 +129,7 @@ function loadTournamentData() {
         renderFinals();
         renderFifthPlaceMatch();
         renderSeventhPlaceMatch();
+        renderGallery(galleryImages); // Renderizar la galería con las imágenes de Firestore
       }
     } else {
       // Esto puede pasar si el ID es incorrecto o el documento fue borrado.
@@ -609,6 +612,65 @@ function recordSeventhPlaceResult(s1, s2, s3, s4, s5) {
 // =======================================================
 // === INICIALIZACIÓN DE LA APP ==========================
 // =======================================================
+
+// --- Lógica de la Galería (Subida de imágenes) ---
+function uploadImages(files, tournamentId) {
+    const uploadProgressContainer = document.getElementById('uploadProgressContainer');
+    const uploadProgress = document.getElementById('uploadProgress');
+    
+    uploadProgressContainer.style.display = 'block';
+    uploadProgress.value = 0;
+
+    const uploadPromises = Array.from(files).map(file => {
+        // Crear una referencia única para cada imagen
+        const imageRef = storage.ref(`tournaments/${tournamentId}/${Date.now()}_${file.name}`);
+        
+        // Subir el archivo
+        const uploadTask = imageRef.put(file);
+
+        return new Promise((resolve, reject) => {
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    // Actualizar el progreso (opcional, pero buena UX)
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    uploadProgress.value = progress;
+                    console.log('Upload is ' + progress + '% done');
+                }, 
+                (error) => {
+                    // Manejar errores
+                    console.error("Error al subir la imagen:", error);
+                    reject(error);
+                }, 
+                () => {
+                    // Subida completada, obtener URL y guardarla en Firestore
+                    uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+                        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+                        
+                        // Usamos arrayUnion para añadir la URL al array 'gallery' sin duplicados
+                        tournamentRef.update({
+                            gallery: firebase.firestore.FieldValue.arrayUnion(downloadURL)
+                        }).then(() => {
+                            showNotification(`Imagen ${file.name} subida y guardada.`, 'success');
+                            resolve();
+                        }).catch(reject);
+                    }).catch(reject);
+                }
+            );
+        });
+    });
+
+    Promise.all(uploadPromises)
+        .then(() => {
+            showNotification('Todas las imágenes se han subido correctamente.', 'success');
+            uploadProgressContainer.style.display = 'none';
+            document.getElementById('imageUpload').value = ''; // Limpiar el input
+        })
+        .catch(error => {
+            console.error("Ocurrió un error durante la subida de imágenes:", error);
+            showNotification('Error al subir una o más imágenes.', 'error');
+            uploadProgressContainer.style.display = 'none';
+        });
+}
 
 // Cargar los datos al inicio y escuchar cambios en tiempo real
 document.addEventListener('DOMContentLoaded', loadTournamentData);
