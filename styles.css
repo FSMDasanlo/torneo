@@ -513,23 +513,17 @@ input:focus, select:focus {
     border-left: 5px solid #8BC34A;
     border-bottom: 1px solid #eee;
   }
-  /* Ajuste para el listado de parejas en móvil */
-  .pair-item {
-      /* Revertimos al comportamiento flex por defecto (fila) para mantener todo en una línea */
-      flex-wrap: nowrap; /* Evita que los botones salten a la línea de abajo */
-  }
-  .pair-item span {
-      white-space: nowrap; /* Evita que el nombre de la pareja se parta en varias líneas */
-      overflow: hidden; /* Oculta el texto que se desborda */
-      text-overflow: ellipsis; /* Añade "..." al final del texto cortado */
-  }
-  .pair-actions {
-      align-self: flex-end;
-  }
   /* Para que el match-item se vea bien en móvil */
   .match-item {
       align-items: flex-start;
       flex-direction: column;
+  }
+  /* CORRECCIÓN CLAVE: Forzar a que los items de pareja se mantengan en una sola fila */
+  .pair-item.match-item {
+      flex-direction: row !important; /* ¡La clave! Mantiene la fila */
+      align-items: center !important; /* Centra verticalmente los elementos */
+      flex-wrap: nowrap; /* Evita que los botones salten de línea */
+      width: 100%; /* Ocupa todo el ancho disponible */
   }
   .match-item .pair-box, .result-table .pair-box {
       width: 100%; /* Las cajas de pareja ocupan todo el ancho disponible */
@@ -562,12 +556,38 @@ input:focus, select:focus {
   background-color: #e0e0e0; /* Un fondo por si alguna imagen no carga */
 }
 
-.carousel-slide img {
+.carousel-item {
+  position: relative; /* Necesario para posicionar el botón de eliminar */
+  width: 100%;
+  height: 100%;
+  display: none; /* Ocultamos todos por defecto, showSlide() mostrará uno */
+}
+
+.carousel-item img {
   width: 100%;
   height: 100%;
   object-fit: cover; /* Magia: Escala la imagen para llenar el contenedor sin deformarla */
-  display: none; /* Ocultamos todas por defecto */
   vertical-align: middle;
+}
+
+.btn-delete-img {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background-color: rgba(231, 76, 60, 0.8); /* Rojo semitransparente */
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.3s;
+}
+
+.btn-delete-img:hover {
+  background-color: #c0392b; /* Rojo sólido */
 }
 
 .carousel-button {
