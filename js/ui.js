@@ -575,8 +575,24 @@ function renderGallery(imageUrls = []) {
     const slideContainer = document.querySelector('.carousel-slide');
     if (!slideContainer) return;
 
-    if (imageUrls.length > 0) {
-        slideContainer.innerHTML = imageUrls.map(url => `<img src="${url}" alt="Foto del torneo">`).join('');
+    if (imageUrls && imageUrls.length > 0) {
+        slideContainer.innerHTML = imageUrls.map(url => `
+            <div class="carousel-item">
+                <img src="${url}" alt="Foto del torneo">
+                <button class="btn-delete-img" title="Eliminar imagen"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        `).join('');
+
+        // Añadir eventos a los nuevos botones de eliminar
+        slideContainer.querySelectorAll('.btn-delete-img').forEach((button, index) => {
+            button.onclick = () => {
+                const imageUrlToDelete = imageUrls[index];
+                if (confirm('¿Estás seguro de que quieres eliminar esta imagen? Esta acción no se puede deshacer.')) {
+                    deleteImage(imageUrlToDelete); // Lógica en app.js
+                }
+            };
+        });
+
         showSlide(0);
     } else {
         slideContainer.innerHTML = '<p>Aún no hay imágenes en la galería. ¡Sube la primera!</p>';
@@ -588,7 +604,7 @@ function moveSlide(n) {
 }
 
 function showSlide(n) {
-    const slides = document.querySelectorAll('.carousel-slide img');
+    const slides = document.querySelectorAll('.carousel-slide .carousel-item');
     if (slides.length === 0) return;
 
     if (n >= slides.length) slideIndex = 0;

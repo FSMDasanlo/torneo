@@ -672,5 +672,33 @@ function uploadImages(files, tournamentId) {
         });
 }
 
+// --- Lógica de la Galería (Eliminación de imágenes) ---
+async function deleteImage(imageUrl) {
+    if (!currentTournamentId) {
+        showNotification('ID de torneo no encontrado. No se puede eliminar la imagen.', 'error');
+        return;
+    }
+
+    try {
+        // 1. Obtener la referencia del archivo en Storage a partir de su URL
+        const imageRef = storage.refFromURL(imageUrl);
+
+        // 2. Borrar el archivo de Storage
+        await imageRef.delete();
+
+        // 3. Borrar la URL del array en Firestore
+        const tournamentRef = db.collection('tournaments').doc(currentTournamentId);
+        await tournamentRef.update({
+            gallery: firebase.firestore.FieldValue.arrayRemove(imageUrl)
+        });
+
+        showNotification('Imagen eliminada correctamente.', 'success');
+        // La galería se actualizará automáticamente gracias al listener onSnapshot
+    } catch (error) {
+        console.error("Error al eliminar la imagen:", error);
+        showNotification('Error al eliminar la imagen. Revisa la consola para más detalles.', 'error');
+    }
+}
+
 // Cargar los datos al inicio y escuchar cambios en tiempo real
 document.addEventListener('DOMContentLoaded', loadTournamentData);
