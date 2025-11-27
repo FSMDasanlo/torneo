@@ -228,12 +228,40 @@ input:focus, select:focus {
 
 .radio-group {
     display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+    justify-content: space-between; /* Distribuye el espacio entre los elementos */
+    align-items: center;
+    gap: 10px; /* Reducimos el espacio entre elementos */
+    flex-wrap: nowrap; /* Evita que los elementos salten a la siguiente línea */
 }
 
 .radio-group label {
     cursor: pointer;
+    font-size: 0.9em; /* Hacemos la fuente un poco más pequeña */
+    white-space: nowrap; /* Evita que el texto dentro de la etiqueta se parta */
+}
+
+/* NUEVO: Estilo mejorado para el modo de torneo activo cuando está bloqueado */
+.radio-group label.highlighted-mode {
+    position: relative; /* Necesario para el pseudo-elemento */
+    font-weight: bold;
+    color: #34495e; /* Color de texto más oscuro */
+    background-color: #e9ecef; /* Fondo gris claro para destacar */
+    padding: 8px 12px 8px 30px; /* Más padding izquierdo para el círculo */
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+}
+
+/* El "puntito de color" que pediste */
+.radio-group label.highlighted-mode::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background-color: #8BC34A; /* Color de acento verde */
+    border-radius: 50%;
 }
 
 /* --- NUEVO: Estilos para la bolsa de sorteo --- */

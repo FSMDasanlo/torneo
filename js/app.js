@@ -165,6 +165,12 @@ function clearGroupResults() {
 // === FUNCIONES DE LÓGICA (CRUD de Parejas) =============
 // =======================================================
 
+// --- NUEVA FUNCIÓN AUXILIAR ---
+// Comprueba si el torneo ya tiene algún resultado introducido.
+function hasTournamentStarted() {
+    return matches.some(m => m.sets && m.sets.length > 0 && m.sets.some(s => s.a > 0 || s.b > 0));
+}
+
 function updateGroupLimit(limit) {
   groupLimit = limit;
   saveTournamentData();

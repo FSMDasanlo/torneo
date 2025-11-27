@@ -49,23 +49,26 @@ function handleUpdateLimit(){
 }
 
 // --- NUEVO: Lógica de cambio de modo ---
-function handleModeChange() {
+function handleModeChange(forceHide = false) {
     const mode = document.querySelector('input[name="tournamentMode"]:checked').value;
     
     // Ocultar todos los paneles de inputs
     document.getElementById('mode-directed-inputs').style.display = 'none';
     document.getElementById('mode-semi-directed-inputs').style.display = 'none';
     document.getElementById('mode-open-inputs').style.display = 'none';
-
-    // Mostrar el panel correspondiente
-    document.getElementById(`mode-${mode}-inputs`).style.display = 'flex';
+    
+    // Si no estamos forzando el ocultado (porque el torneo ha empezado), mostramos el panel correcto
+    if (!forceHide) {
+        // Mostrar el panel correspondiente
+        document.getElementById(`mode-${mode}-inputs`).style.display = 'flex';
+    }
 
     // SOLO actuar si el modo seleccionado es REALMENTE diferente al actual.
     if (mode !== tournamentMode) {
         // Si hay datos en el torneo, es una acción destructiva, así que pedimos confirmación.
         if (groups[1].length > 0 || groups[2].length > 0 || drawPool.length > 0) {
             if (confirm("Cambiar de modo borrará las parejas y jugadores actuales. ¿Continuar?")) {
-                setTournamentMode(mode);
+                setTournamentMode(mode); // Lógica en app.js
             } else {
                 // Si cancela, vuelve a seleccionar el radio button anterior
                 document.querySelector(`input[name="tournamentMode"][value="${tournamentMode}"]`).checked = true;
@@ -85,6 +88,36 @@ function renderCurrentPairs(){
   const container = document.getElementById('currentPairs');
   const fragment = document.createDocumentFragment();
 
+  // --- LÓGICA PARA DESHABILITAR EL CAMBIO DE MODO ---
+  const tournamentHasStarted = hasTournamentStarted(); // Lógica en app.js
+  const modeRadios = document.querySelectorAll('input[name="tournamentMode"]');
+  
+  // Elementos a deshabilitar/ocultar si el torneo ha empezado
+  const limitInput = document.getElementById('limitInput');
+  const addPairForms = document.querySelectorAll('.input-group'); // Coge todos los formularios de añadir
+
+  modeRadios.forEach(radio => {
+      radio.disabled = tournamentHasStarted;
+      // Limpiar el resaltado anterior
+      radio.parentElement.classList.remove('highlighted-mode');
+  });
+
+  // Deshabilitar inputs si el torneo ha comenzado
+  limitInput.disabled = tournamentHasStarted;
+  if (tournamentHasStarted) {
+    // Si el torneo ha empezado, ocultamos todos los formularios de añadir.
+    addPairForms.forEach(form => form.style.display = 'none');
+  } else {
+    // Si el torneo NO ha empezado, nos aseguramos de que se muestre el formulario correcto.
+    handleModeChange(); 
+  }
+
+  if (tournamentHasStarted) {
+      // Resaltar el modo actual y mostrar advertencia
+      document.querySelector('input[name="tournamentMode"]:checked').parentElement.classList.add('highlighted-mode');
+      document.getElementById('mode-change-warning').style.display = 'block';
+  }
+
   // Sincronizar el radio button con el modo actual al cargar
   const radioToCheck = document.querySelector(`input[name="tournamentMode"][value="${tournamentMode}"]`);
   if (radioToCheck) {
@@ -103,75 +136,82 @@ function renderCurrentPairs(){
     }
   }
 
-  if (tournamentMode === 'directed') {
-      const title = document.createElement('h4');
-      title.textContent = 'Parejas Registradas:';
-      fragment.appendChild(title);
+  // --- LÓGICA DE RENDERIZADO: Mostrar grupos si existen, si no, mostrar la bolsa de sorteo ---
+  const hasPairsInGroups = (groups[1] && groups[1].length > 0) || (groups[2] && groups[2].length > 0);
 
-      for(const g of [1, 2]){
-        const groupContainer = document.createElement('div');
-        groupContainer.className = 'group-container';
+  if (hasPairsInGroups) {
+    // Si hay parejas en los grupos, las mostramos (esto ocurre en modo dirigido o después de un sorteo)
+    const title = document.createElement('h4');
+    title.textContent = 'Parejas Registradas:';
+    fragment.appendChild(title);
 
-        const currentGroup = groups[g] || [];
-        const groupHeader = document.createElement('h4'); // Título más grande
-        groupHeader.innerHTML = `<i class="fas fa-users-cog"></i> Grupo ${g} (${currentGroup.length}/${groupLimit} parejas)`;
-        groupContainer.appendChild(groupHeader);
+    for(const g of [1, 2]){
+      const groupContainer = document.createElement('div');
+      groupContainer.className = 'group-container';
 
-        currentGroup.forEach(p => {
-            const pairItemDiv = document.createElement('div');
-            pairItemDiv.className = 'match-item pair-item';
-            pairItemDiv.innerHTML = `
-                <span>${formatPairDisplay(p)}</span>
-                <div class="pair-actions">
-                    <button class="btn-icon btn-edit"><i class="fas fa-edit"></i></button>
-                    <button class="btn-icon btn-delete"><i class="fas fa-trash-alt"></i></button>
-                </div>`;
-            
-            pairItemDiv.querySelector('.btn-edit').onclick = () => handleEditPair(p.id, g);
-            pairItemDiv.querySelector('.btn-delete').onclick = () => handleDeletePair(p.id);
+      const currentGroup = groups[g] || [];
+      const groupHeader = document.createElement('h4');
+      groupHeader.innerHTML = `<i class="fas fa-users-cog"></i> Grupo ${g} (${currentGroup.length}/${groupLimit} parejas)`;
+      groupContainer.appendChild(groupHeader);
 
-            groupContainer.appendChild(pairItemDiv);
+      currentGroup.forEach(p => {
+          const pairItemDiv = document.createElement('div');
+          pairItemDiv.className = 'match-item pair-item';
+          pairItemDiv.innerHTML = `
+              <span>${formatPairDisplay(p)}</span>
+              <div class="pair-actions">
+                  <button class="btn-icon btn-edit" title="Editar pareja"><i class="fas fa-edit"></i></button>
+                  <button class="btn-icon btn-delete" title="Eliminar pareja"><i class="fas fa-trash-alt"></i></button>
+              </div>`;
+          
+          pairItemDiv.querySelector('.btn-edit').onclick = () => handleEditPair(p.id, g);
+          const deleteBtn = pairItemDiv.querySelector('.btn-delete');
+          // Deshabilitar el botón de borrar si el torneo ha empezado
+          deleteBtn.disabled = tournamentHasStarted;
+          deleteBtn.onclick = () => handleDeletePair(p.id);
+
+          groupContainer.appendChild(pairItemDiv);
+      });
+      fragment.appendChild(groupContainer);
+    }
+  } else if (tournamentMode !== 'directed') {
+    // Si NO hay parejas en grupos Y el modo es de sorteo, mostramos la bolsa
+    const title = document.createElement('h4');
+    title.innerHTML = `<i class="fas fa-ticket-alt"></i> Bolsa para Sorteo (${drawPool.length} inscritos)`;
+    fragment.appendChild(title);
+
+    if (drawPool.length > 0) {
+        const poolContainer = document.createElement('div');
+        poolContainer.className = 'draw-pool-container';
+        drawPool.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'draw-pool-item';
+            if (item.type === 'pair') {
+                itemDiv.innerHTML = `<span><i class="fas fa-user-friends"></i> ${item.players.join(' - ')}</span>`;
+            } else {
+                itemDiv.innerHTML = `<span><i class="fas fa-user"></i> ${item.name}</span>`;
+            }
+            poolContainer.appendChild(itemDiv);
         });
-        fragment.appendChild(groupContainer);
-      }
-  } else {
-      // Modos Semidirigido y Abierto
-      const title = document.createElement('h4');
-      title.innerHTML = `<i class="fas fa-ticket-alt"></i> Bolsa para Sorteo (${drawPool.length} inscritos)`;
-      fragment.appendChild(title);
+        fragment.appendChild(poolContainer);
 
-      if (drawPool.length > 0) {
-          const poolContainer = document.createElement('div');
-          poolContainer.className = 'draw-pool-container';
-          drawPool.forEach(item => {
-              const itemDiv = document.createElement('div');
-              itemDiv.className = 'draw-pool-item';
-              if (item.type === 'pair') {
-                  itemDiv.innerHTML = `<span><i class="fas fa-user-friends"></i> ${item.players.join(' - ')}</span>`;
-              } else {
-                  itemDiv.innerHTML = `<span><i class="fas fa-user"></i> ${item.name}</span>`;
-              }
-              poolContainer.appendChild(itemDiv);
-          });
-          fragment.appendChild(poolContainer);
-
-          const drawButton = document.createElement('button');
-          drawButton.id = 'performDrawBtn';
-          drawButton.className = 'btn-primary';
-          drawButton.style.marginTop = '15px';
-          drawButton.innerHTML = '<i class="fas fa-dice"></i> Realizar Sorteo';
-          drawButton.onclick = () => {
-              if (confirm("¿Realizar el sorteo? Esto asignará las parejas/jugadores a los grupos y limpiará la bolsa.")) {
-                  performDraw(); // Lógica en app.js
-                  document.querySelector('.tab-button[onclick*="tab-grupos"]').click(); // Cambia a la pestaña "Cuadro"
-              }
-          };
-          fragment.appendChild(drawButton);
-      } else {
-          const p = document.createElement('p');
-          p.textContent = 'Añade parejas o jugadores para el sorteo.';
-          fragment.appendChild(p);
-      }
+        const drawButton = document.createElement('button');
+        drawButton.id = 'performDrawBtn';
+        drawButton.className = 'btn-primary';
+        drawButton.style.marginTop = '15px';
+        drawButton.innerHTML = '<i class="fas fa-dice"></i> Realizar Sorteo';
+        drawButton.onclick = () => {
+            if (confirm("¿Realizar el sorteo? Esto asignará las parejas/jugadores a los grupos y limpiará la bolsa.")) {
+                performDraw(); // Lógica en app.js
+                document.querySelector('.tab-button[onclick*="tab-grupos"]').click(); // Cambia a la pestaña "Cuadro"
+            }
+        };
+        fragment.appendChild(drawButton);
+    } else {
+        const p = document.createElement('p');
+        p.textContent = 'Añade parejas o jugadores para el sorteo.';
+        fragment.appendChild(p);
+    }
   }
 
   container.innerHTML = '';
@@ -618,6 +658,9 @@ function showSlide(n) {
 document.addEventListener('DOMContentLoaded', () => {
     // Abrir la primera pestaña por defecto
     document.querySelector('.tab-button').click();
+    // CAMBIO: Renombrar la primera pestaña a "Gestión de jugadores"
+    const firstTab = document.querySelector('.tab-button');
+    if (firstTab) firstTab.innerHTML = '<i class="fas fa-users"></i> Gestión de jugadores';
 
     // Asignar eventos a elementos estáticos
     document.getElementById('limitInput').addEventListener('change', handleUpdateLimit);
