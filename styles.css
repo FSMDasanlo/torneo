@@ -492,54 +492,76 @@ input:focus, select:focus {
     margin-bottom: 25px;
 }
 
-/* Responsive adjustments */
+/* ======================================================= */
+/* === ESTILOS RESPONSIVE (PANTALLAS PEQUEÑAS) =========== */
+/* ======================================================= */
 @media (max-width: 768px) {
   .input-group, .set-inputs {
     flex-direction: column;
     align-items: stretch;
   }
+
   input, select, .btn-primary, .btn-secondary {
     width: 100%;
   }
+
   .tab-navigation {
     flex-direction: column;
   }
+
   .tab-button {
     width: 100%;
     text-align: left;
     border-bottom: 1px solid #eee;
   }
+
   .tab-button.active {
     border-left: 5px solid #8BC34A;
     border-bottom: 1px solid #eee;
   }
-  /* Para que el match-item se vea bien en móvil */
+
+  /* Ajuste para los items de partido en general */
   .match-item {
       align-items: flex-start;
       flex-direction: column;
+      width: 100%; /* Ocupa todo el ancho */
+      box-sizing: border-box;
   }
-  /* CORRECCIÓN CLAVE: Forzar a que los items de pareja se mantengan en una sola fila */
+
+  /* CORRECCIÓN CLAVE: Forzar a que los items de pareja (en la lista de gestión) se mantengan en una sola fila */
   .pair-item.match-item {
       flex-direction: row !important; /* ¡La clave! Mantiene la fila */
       align-items: center !important; /* Centra verticalmente los elementos */
       flex-wrap: nowrap; /* Evita que los botones salten de línea */
       width: 100%; /* Ocupa todo el ancho disponible */
   }
+
+  /* Las cajas de pareja ocupan todo el ancho y se apilan verticalmente en los partidos */
   .match-item .pair-box, .result-table .pair-box {
       width: 100%; /* Las cajas de pareja ocupan todo el ancho disponible */
       box-sizing: border-box; /* Para que el padding no sume al ancho */
       margin: 2px 0;
   }
-  .result-table td:first-child {
-      min-width: 150px; /* Un mínimo para que no se aplaste demasiado */
+
+  /* El "vs" se centra cuando las cajas de pareja se apilan */
+  .match-item .vs {
+      margin: 5px 0;
+      align-self: center;
   }
+
   /* Para que la tabla de resultados se pueda desplazar horizontalmente en móvil */
   .result-form-item {
       width: 100%;
       overflow-x: auto; /* ¡Magia para el scroll horizontal! */
+      box-sizing: border-box;
   }
+
   .result-table {
       width: 100%; /* La tabla intenta ocupar el 100%, pero el overflow la controla */
+  }
+
+  .result-table td:first-child {
+      min-width: 150px; /* Un mínimo para que no se aplaste demasiado */
   }
 }
  /* --- Estilos de la Galería / Carrusel --- */

@@ -119,6 +119,18 @@
             gap: 8px;
             margin-bottom: 10px;
         }
+
+        /* NUEVO: Estilos para la cabecera de la sección de torneos */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px; /* Espacio antes de la lista */
+        }
+        .section-header h2 {
+            margin: 0; /* Quitamos el margen por defecto del h2 */
+        }
+
     </style>
 </head>
 <body>
@@ -128,16 +140,20 @@
         <h1><i class="fas fa-trophy"></i>Torneos de Padel</h1>
     </header>
 
-    <div class="card">
+    <!-- Contenedor para crear torneo, ahora oculto por defecto -->
+    <div id="createTournamentCard" class="card" style="display: none;">
         <h2>Crear Nuevo Torneo</h2>
         <div class="input-group">
             <input type="text" id="newTournamentName" placeholder="Nombre del nuevo torneo (ej. Torneo de Verano 2024)">
-            <button id="createTournamentBtn" class="btn-primary"><i class="fas fa-plus"></i> Crear y Abrir</button>
+            <button class="btn-primary"><i class="fas fa-plus"></i> Crear y Abrir</button>
         </div>
     </div>
 
     <div class="card">
-        <h2>Seleccionar Torneo Existente</h2>
+        <div class="section-header">
+            <h2>Seleccionar Torneo</h2>
+            <button id="showCreateBtn" class="btn-secondary"><i class="fas fa-plus"></i> Nuevo</button>
+        </div>
         <div id="tournamentsList">
             <p>Cargando torneos...</p>
         </div>

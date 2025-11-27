@@ -127,11 +127,19 @@ async function performCopy() {
 // Cargar y mostrar la lista de torneos al cargar la página
 function initializeTournamentList() {
     const listContainer = document.getElementById('tournamentsList');
-    const createBtn = document.querySelector('.btn-primary');
+    const createBtn = document.querySelector('#createTournamentCard .btn-primary');
     const nameInput = document.getElementById('newTournamentName');
+    
+    // NUEVO: Elementos para mostrar/ocultar el formulario de creación
+    const showCreateBtn = document.getElementById('showCreateBtn');
+    const createTournamentCard = document.getElementById('createTournamentCard');
 
     // Asignar eventos a los elementos
     createBtn.onclick = createNewTournament;
+    showCreateBtn.onclick = () => {
+        createTournamentCard.style.display = 'block'; // Muestra el contenedor
+        nameInput.focus(); // Pone el foco en el campo de texto
+    };
     nameInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             createNewTournament();
