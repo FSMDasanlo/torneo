@@ -130,6 +130,15 @@ input:focus, select:focus {
   gap: 10px;
 }
 
+#changeTournamentBtn {
+  background-color: #607d8b;
+  color: white;
+}
+
+#changeTournamentBtn:hover {
+  background-color: #546e7a;
+}
+
 /* --- Estilos de gestión de Parejas y Límite --- */
 
 .input-limit {
