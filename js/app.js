@@ -484,8 +484,16 @@ function computeStandings() {
       if (head) {
         const res = getMatchResult(head);
         if (res && res.winner) {
-          if (res.winner === a.pair.id) return -1; // a ganó el head-to-head -> a arriba
-          if (res.winner === b.pair.id) return 1;  // b ganó -> b arriba
+          if (res.winner === a.pair.id) {
+            a.headToHeadResolved = true;
+            a.headToHeadOver = b.pair.id;
+            return -1; // a ganó el head-to-head -> a arriba
+          }
+          if (res.winner === b.pair.id) {
+            b.headToHeadResolved = true;
+            b.headToHeadOver = a.pair.id;
+            return 1;  // b ganó -> b arriba
+          }
         }
       }
 
