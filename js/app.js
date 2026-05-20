@@ -26,6 +26,7 @@ let seventhPlaceMatch = null; // Nuevo: Partido 7º-8º puesto
 let groupLimit = 4;
 let nextColorIndex = 0; // Nuevo: Índice para la paleta de colores
 let tournamentMode = 'directed'; // Nuevo: 'directed', 'semi-directed', 'open'
+let classificationMethod = 'points'; // Nuevo: criterio de clasificación por proyecto
 let drawPool = []; // Nuevo: "Bolsa" para sorteos
 
 // Paleta de colores pastel única para cada pareja (se pueden añadir más)
@@ -67,6 +68,7 @@ async function saveTournamentData() {
     groupLimit,
     nextColorIndex,
     tournamentMode,
+    classificationMethod,
     drawPool,
   };
   try {
@@ -102,6 +104,7 @@ function loadTournamentData() {
       tournamentName = saved.name || "Torneo sin nombre"; // Cargar el nombre del torneo
       nextColorIndex = saved.nextColorIndex || 0; 
       tournamentMode = saved.tournamentMode || 'directed';
+      classificationMethod = saved.classificationMethod || 'points';
       drawPool = saved.drawPool || [];
       const galleryImages = saved.gallery || []; // Cargar las imágenes de la galería
 
@@ -175,6 +178,12 @@ function updateGroupLimit(limit) {
   groupLimit = limit;
   saveTournamentData();
 }
+
+function updateClassificationMethod(method) {
+  classificationMethod = method;
+  saveTournamentData();
+}
+
 // Añadir pareja
 function addPair(group, player1, player2) {
   const newPair = {
@@ -412,6 +421,8 @@ function computeStandings() {
       puntos: 0,
       sets: 0,
       juegos: 0,
+      gamesAgainst: 0,
+      diferenciaJuegos: 0,
     }));
 
     for (const match of matches.filter(
@@ -436,13 +447,24 @@ function computeStandings() {
 
       // Juegos
       base[idxA].juegos += result.gamesA;
+      base[idxA].gamesAgainst += result.gamesB;
       base[idxB].juegos += result.gamesB;
+      base[idxB].gamesAgainst += result.gamesA;
     }
 
-    // Ordenar (Puntos > Sets a favor > Juegos a favor)
-    standings[g] = base.sort(
-      (a, b) => b.puntos - a.puntos || b.sets - a.sets || b.juegos - a.juegos
-    );
+    base.forEach((x) => {
+      x.diferenciaJuegos = x.juegos - x.gamesAgainst;
+    });
+
+    if (classificationMethod === 'gameDifference') {
+      standings[g] = base.sort(
+        (a, b) => b.diferenciaJuegos - a.diferenciaJuegos || b.juegos - a.juegos || b.sets - a.sets
+      );
+    } else {
+      standings[g] = base.sort(
+        (a, b) => b.puntos - a.puntos || b.sets - a.sets || b.juegos - a.juegos
+      );
+    }
   }
   return standings;
 }

@@ -145,6 +145,15 @@
         <h2>Crear Nuevo Torneo</h2>
         <div class="input-group">
             <input type="text" id="newTournamentName" placeholder="Nombre del nuevo torneo (ej. Torneo de Verano 2024)">
+        </div>
+        <div class="input-group">
+            <label style="margin-bottom: 8px; display: block; font-weight: 600;">Criterio de clasificación:</label>
+            <div class="radio-group">
+                <label><input type="radio" name="classificationMethod" value="points" checked> Puntos + Sets + Juegos</label>
+                <label><input type="radio" name="classificationMethod" value="gameDifference"> Diferencia Juegos Ganados - Juegos Perdidos</label>
+            </div>
+        </div>
+        <div class="input-group">
             <button class="btn-primary"><i class="fas fa-plus"></i> Crear y Abrir</button>
         </div>
     </div>

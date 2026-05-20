@@ -83,6 +83,15 @@ function handleClearGroupResults() {
     }
 }
 
+// --- NUEVO: Lógica de cambio de criterio de clasificación ---
+function handleClassificationMethodChange() {
+    const method = document.querySelector('input[name="classificationMethod"]:checked').value;
+    if (method !== classificationMethod) {
+        updateClassificationMethod(method); // Lógica en app.js
+        showNotification('Criterio de clasificación actualizado.');
+    }
+}
+
 // Renderiza el listado de parejas actual
 function renderCurrentPairs(){
   const container = document.getElementById('currentPairs');
@@ -122,6 +131,12 @@ function renderCurrentPairs(){
   const radioToCheck = document.querySelector(`input[name="tournamentMode"][value="${tournamentMode}"]`);
   if (radioToCheck) {
       radioToCheck.checked = true;
+  }
+
+  // Sincronizar el criterio de clasificación
+  const classificationRadio = document.querySelector(`input[name="classificationMethod"][value="${classificationMethod}"]`);
+  if (classificationRadio) {
+      classificationRadio.checked = true;
   }
 
   // Actualizar estado del select de grupos
@@ -413,23 +428,47 @@ function showNotification(message) {
 function handleShowStandings(standingsData){
   const st = standingsData || computeStandings(); // Usa los datos pasados o los calcula si no existen
   const container = document.getElementById('standings');
+  const methodLabel = classificationMethod === 'gameDifference'
+    ? 'Criterio activo: Diferencia Juegos Ganados - Juegos Perdidos'
+    : 'Criterio activo: Puntos + Sets + Juegos';
+  const labelElement = document.getElementById('classificationMethodLabel');
+  if (labelElement) {
+    labelElement.textContent = methodLabel;
+  }
+
   let html = '';
   for(const g of [1,2]){
     html += `<h3><i class="fas fa-list-ol"></i> Grupo ${g}</h3>`;
-    html += `<table class="standings-table">
+    if (classificationMethod === 'gameDifference') {
+      html += `<table class="standings-table">
+                <thead>
+                    <tr>
+                        <th>Pos</th><th>Pareja</th><th>Diferencia</th><th>Juegos Ganados</th><th>Juegos Perdidos</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+    } else {
+      html += `<table class="standings-table">
                 <thead>
                     <tr>
                         <th>Pos</th><th>Pareja</th><th>Puntos</th><th>Sets Ganados</th><th>Juegos Ganados</th>
                     </tr>
                 </thead>
-                <tbody>`; 
+                <tbody>`;
+    }
+
     if (st[g] && st[g].length > 0) {
         st[g].forEach((r, index) => {
             const rowClass = index < 2 ? 'class="qualified-row"' : '';
-            html += `<tr ${rowClass}><td>${index + 1}</td><td>${formatPairDisplay(r.pair)}</td><td>${r.puntos}</td><td>${r.sets}</td><td>${r.juegos}</td></tr>`;
+            if (classificationMethod === 'gameDifference') {
+              html += `<tr ${rowClass}><td>${index + 1}</td><td>${formatPairDisplay(r.pair)}</td><td>${r.diferenciaJuegos}</td><td>${r.juegos}</td><td>${r.gamesAgainst}</td></tr>`;
+            } else {
+              html += `<tr ${rowClass}><td>${index + 1}</td><td>${formatPairDisplay(r.pair)}</td><td>${r.puntos}</td><td>${r.sets}</td><td>${r.juegos}</td></tr>`;
+            }
         });
     } else {
-        html += `<tr><td colspan="5">No hay datos de clasificación para este grupo.</td></tr>`;
+        const colspan = classificationMethod === 'gameDifference' ? 5 : 5;
+        html += `<tr><td colspan="${colspan}">No hay datos de clasificación para este grupo.</td></tr>`;
     }
     html += `</tbody></table>`;
   }
