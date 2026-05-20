@@ -439,7 +439,7 @@ function handleShowStandings(standingsData){
   let html = '';
   for(const g of [1,2]){
     html += `<h3><i class="fas fa-list-ol"></i> Grupo ${g}</h3>`;
-    if (classificationMethod === 'gameDifference') {
+        if (classificationMethod === 'gameDifference') {
       html += `<table class="standings-table">
                 <thead>
                     <tr>
@@ -460,11 +460,11 @@ function handleShowStandings(standingsData){
     if (st[g] && st[g].length > 0) {
         st[g].forEach((r, index) => {
             const rowClass = index < 2 ? 'class="qualified-row"' : '';
-            if (classificationMethod === 'gameDifference') {
-              html += `<tr ${rowClass}><td>${index + 1}</td><td>${formatPairDisplay(r.pair)}</td><td>${r.diferenciaJuegos}</td><td>${r.juegos}</td><td>${r.gamesAgainst}</td></tr>`;
-            } else {
-              html += `<tr ${rowClass}><td>${index + 1}</td><td>${formatPairDisplay(r.pair)}</td><td>${r.puntos}</td><td>${r.sets}</td><td>${r.juegos}</td></tr>`;
-            }
+                        if (classificationMethod === 'gameDifference') {
+                            html += `<tr ${rowClass}><td>${index + 1}</td><td>${formatPairDisplay(r.pair)}${r.headToHeadResolved ? ' <i class="fas fa-handshake" title="Desempate por enfrentamiento directo"></i>' : ''}</td><td>${r.diferenciaJuegos}</td><td>${r.juegos}</td><td>${r.gamesAgainst}</td></tr>`;
+                        } else {
+                            html += `<tr ${rowClass}><td>${index + 1}</td><td>${formatPairDisplay(r.pair)}${r.headToHeadResolved ? ' <i class="fas fa-handshake" title="Desempate por enfrentamiento directo"></i>' : ''}</td><td>${r.puntos}</td><td>${r.sets}</td><td>${r.juegos}</td></tr>`;
+                        }
         });
     } else {
         const colspan = classificationMethod === 'gameDifference' ? 5 : 5;

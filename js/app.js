@@ -423,6 +423,8 @@ function computeStandings() {
       juegos: 0,
       gamesAgainst: 0,
       diferenciaJuegos: 0,
+      headToHeadResolved: false,
+      headToHeadOver: null,
     }));
 
     for (const match of matches.filter(
@@ -456,14 +458,69 @@ function computeStandings() {
       x.diferenciaJuegos = x.juegos - x.gamesAgainst;
     });
 
-    if (classificationMethod === 'gameDifference') {
-      standings[g] = base.sort(
-        (a, b) => b.diferenciaJuegos - a.diferenciaJuegos || b.juegos - a.juegos || b.sets - a.sets
-      );
-    } else {
-      standings[g] = base.sort(
-        (a, b) => b.puntos - a.puntos || b.sets - a.sets || b.juegos - a.juegos
-      );
+    // Comparador que aplica criterios principales y, en caso de empate, desempata por enfrentamiento directo
+    const comparator = (a, b) => {
+      if (classificationMethod === 'gameDifference') {
+        const c1 = b.diferenciaJuegos - a.diferenciaJuegos;
+        if (c1 !== 0) return c1;
+        const c2 = b.juegos - a.juegos;
+        if (c2 !== 0) return c2;
+        const c3 = b.sets - a.sets;
+        if (c3 !== 0) return c3;
+      } else {
+        const c1 = b.puntos - a.puntos;
+        if (c1 !== 0) return c1;
+        const c2 = b.sets - a.sets;
+        if (c2 !== 0) return c2;
+        const c3 = b.juegos - a.juegos;
+        if (c3 !== 0) return c3;
+      }
+
+      // Si aún están empatados, buscar el enfrentamiento directo en esta fase de grupos
+      const head = matches.find(m => m.group == g && (
+        (m.a && m.b && m.a.id === a.pair.id && m.b.id === b.pair.id) ||
+        (m.a && m.b && m.a.id === b.pair.id && m.b.id === a.pair.id)
+      ));
+      if (head) {
+        const res = getMatchResult(head);
+        if (res && res.winner) {
+          if (res.winner === a.pair.id) return -1; // a ganó el head-to-head -> a arriba
+          if (res.winner === b.pair.id) return 1;  // b ganó -> b arriba
+        }
+      }
+
+      return 0; // mantienen empate si no hay enfrentamiento o no hay resultado
+    };
+
+    standings[g] = base.sort(comparator);
+
+    // Marcar los desempates resueltos por enfrentamiento directo entre parejas
+    for (let i = 0; i < standings[g].length - 1; i++) {
+      const a = standings[g][i];
+      const b = standings[g][i + 1];
+      let equal = false;
+      if (classificationMethod === 'gameDifference') {
+        equal = a.diferenciaJuegos === b.diferenciaJuegos && a.juegos === b.juegos && a.sets === b.sets;
+      } else {
+        equal = a.puntos === b.puntos && a.sets === b.sets && a.juegos === b.juegos;
+      }
+      if (!equal) continue;
+
+      const head = matches.find(m => m.group == g && (
+        (m.a && m.b && m.a.id === a.pair.id && m.b.id === b.pair.id) ||
+        (m.a && m.b && m.a.id === b.pair.id && m.b.id === a.pair.id)
+      ));
+      if (!head) continue;
+      const res = getMatchResult(head);
+      if (res && res.winner) {
+        if (res.winner === a.pair.id) {
+          a.headToHeadResolved = true;
+          a.headToHeadOver = b.pair.id;
+        } else if (res.winner === b.pair.id) {
+          b.headToHeadResolved = true;
+          b.headToHeadOver = a.pair.id;
+        }
+      }
     }
   }
   return standings;
@@ -495,6 +552,13 @@ function generateSemifinals() {
       sets: [], winner: null 
     },
   ];
+
+  // Al regenerar las semifinales, limpiar todas las eliminatorias dependientes
+  // para evitar inconsistencias: final, 3º/4º, 5º/6º y 7º/8º
+  finalMatch = null;
+  thirdPlace = null;
+  fifthPlaceMatch = null;
+  seventhPlaceMatch = null;
 
   saveTournamentData();
 }
