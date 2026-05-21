@@ -117,6 +117,11 @@ input:focus, select:focus {
   transform: translateY(-2px);
 }
 
+.btn-danger:disabled {
+  background-color: #fab1a0;
+  cursor: not-allowed;
+}
+
 /* --- Estilos de Secciones --- */
 .section-header {
   display: flex;
@@ -414,14 +419,70 @@ input:focus, select:focus {
 
 /* --- Estilos para Notificaciones --- */
 .notification {
-    background-color: #34495e;
-    color: white;
-    padding: 15px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    margin-top: 10px;
+  background-color: #34495e;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-top: 10px;
+  opacity: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  animation: slideInRight 0.3s ease-out;
+  z-index: 2000;
+  font-size: 0.95em;
+}
+
+.notification i {
+  font-size: 1.2em;
+}
+
+.notification.success { background-color: #2ecc71; border-left: 5px solid #27ae60; }
+.notification.error { background-color: #e74c3c; border-left: 5px solid #c0392b; }
+.notification.info { background-color: #3498db; border-left: 5px solid #2980b9; }
+
+.notification.fade-out {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.5s ease-out;
+}
+
+/* --- Estilos para Modal de Confirmación Genérico --- */
+.confirm-modal-content {
+    text-align: center;
+    padding: 30px;
+}
+
+.confirm-modal-content i {
+    font-size: 3em;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.confirm-modal-content.danger i { color: #e74c3c; }
+.confirm-modal-content.info i { color: #3498db; }
+
+.confirm-modal-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.confirm-modal-buttons button {
+    flex: 1;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
     opacity: 1;
-    transition: opacity 0.5s ease-out;
+  }
 }
 
 /* --- Tablas de Clasificación --- */

@@ -85,7 +85,7 @@ async function saveTournamentData() {
 // Carga los datos y escucha cambios en tiempo real desde Firestore
 function loadTournamentData() {
   if (!currentTournamentId) {
-    alert("Error: No se ha especificado un ID de torneo. Volviendo a la página de selección.");
+    console.error("No se ha especificado un ID de torneo.");
     window.location.href = 'index.html';
     return;
   }
@@ -137,8 +137,10 @@ function loadTournamentData() {
     } else {
       // Esto puede pasar si el ID es incorrecto o el documento fue borrado.
       console.error("El documento del torneo no existe. Redirigiendo...");
-      alert("Error: El torneo con este ID no fue encontrado.");
-      window.location.href = 'index.html';
+      showNotification("Error: El torneo no fue encontrado.", "error");
+      setTimeout(() => {
+          window.location.href = 'index.html';
+      }, 2000);
     }
   }, (error) => {
     console.error("Error al escuchar cambios de Firestore: ", error);
@@ -151,7 +153,14 @@ function loadTournamentData() {
 
 // Reiniciar todo el torneo (ahora borra de Firestore)
 async function resetTournament() {
-  if (confirm("¿Seguro que quieres borrar ESTE TORNEO PERMANENTEMENTE? Esta acción no se puede deshacer.")) {
+  const confirmed = await showConfirm({
+      title: 'Borrar Torneo',
+      message: '¿Seguro que quieres borrar ESTE TORNEO PERMANENTEMENTE? Esta acción no se puede deshacer.',
+      okText: 'Borrar Todo',
+      isDanger: true,
+      needsPassword: true
+  });
+  if (confirmed) {
     // Borra el documento de Firestore para empezar de cero.
     await tournamentDocRef.delete();
     // La redirección se manejará automáticamente por el listener onSnapshot
@@ -253,7 +262,7 @@ function addPlayerToPool(player) {
 
 function performDraw() {
     if (drawPool.length === 0) {
-        alert("La bolsa de sorteo está vacía. Añade parejas o jugadores primero.");
+        showNotification("La bolsa de sorteo está vacía.", "error");
         return;
     }
 
@@ -269,7 +278,7 @@ function performDraw() {
     } else if (tournamentMode === 'open') {
         // Hay que crear las parejas primero
         if (drawPool.length % 2 !== 0) {
-            alert(`Hay un número impar de jugadores (${drawPool.length}). El último jugador de la lista no será emparejado.`)
+            showNotification(`Número impar de jugadores (${drawPool.length}). El último no será emparejado.`, "info");
         }
         // Barajamos los jugadores
         let shuffledPlayers = [...drawPool].sort(() => 0.5 - Math.random());
@@ -542,7 +551,7 @@ function generateSemifinals() {
 
   // Comprobación principal: ¿Hay suficientes equipos en la clasificación para los cruces?
   if (!g1 || g1.length < 2 || !g2 || g2.length < 2) { 
-    alert("No hay suficientes equipos clasificados (se necesitan los 2 primeros de cada grupo) para generar las semifinales.");
+    showNotification("Faltan equipos clasificados para semifinales.", "error");
     return;
   }
 
@@ -624,7 +633,7 @@ function recordSemiResult(semiId, set1, set2, set3, set4, set5) {
 function generateFinals() {
   // Comprobación principal: ¿Se han jugado ambas semifinales?
   if (semifinals.length < 2 || semifinals.some((s) => !s.winner)) {
-    alert("Ambas semifinales deben tener un resultado registrado para poder generar la final y el 3er puesto.");
+    showNotification("Las semifinales deben tener resultado para generar la final.", "error");
     return;
   }
 
@@ -675,7 +684,7 @@ function generateFifthPlaceMatch() {
         fifthPlaceMatch = { id: 'fifth', a: thirdG1, b: thirdG2, sets: [], winner: null };
         saveTournamentData();
     } else {
-        alert('No hay suficientes equipos (3º de grupo) para generar este partido.');
+        showNotification('Faltan equipos (3º de grupo) para generar el partido.', 'error');
     }
 }
 
@@ -697,7 +706,7 @@ function generateSeventhPlaceMatch() {
         seventhPlaceMatch = { id: 'seventh', a: fourthG1, b: fourthG2, sets: [], winner: null };
         saveTournamentData();
     } else {
-        alert('No hay suficientes equipos (4º de grupo) para generar este partido.');
+        showNotification('Faltan equipos (4º de grupo) para generar el partido.', 'error');
     }
 }
 

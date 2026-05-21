@@ -12,12 +12,68 @@ const db = firebase.firestore();
 
 // --- Lógica de la aplicación ---
 
+function showNotification(message, type = 'info') {
+    const container = document.getElementById('notification-container');
+    if (!container) return;
+    
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    let icon = 'info-circle';
+    if (type === 'success') icon = 'check-circle';
+    if (type === 'error') icon = 'exclamation-triangle';
+    
+    notification.innerHTML = `<i class="fas fa-${icon}"></i> <span>${message}</span>`;
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 500);
+    }, 4000);
+}
+
+function showConfirm({ title, message, okText, isDanger = false, needsPassword = false }) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const titleEl = document.getElementById('confirmTitle');
+        const messageEl = document.getElementById('confirmMessage');
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        const icon = document.getElementById('confirmIcon');
+        const pwdArea = document.getElementById('confirmPasswordArea');
+        const pwdInput = document.getElementById('confirmPasswordInput');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        okBtn.textContent = okText || 'Aceptar';
+        okBtn.className = isDanger ? 'btn-danger' : 'btn-primary';
+        icon.className = isDanger ? 'fas fa-exclamation-triangle' : 'fas fa-question-circle';
+        pwdArea.style.display = needsPassword ? 'block' : 'none';
+        pwdInput.value = '';
+
+        modal.style.display = 'block';
+
+        okBtn.onclick = () => {
+            if (needsPassword && pwdInput.value !== "Traid1959") {
+                showNotification("Contraseña incorrecta", "error");
+                return;
+            }
+            modal.style.display = 'none';
+            resolve(true);
+        };
+        cancelBtn.onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+        };
+    });
+}
+
 async function createNewTournament() {
     const nameInput = document.getElementById('newTournamentName');
     const tournamentName = nameInput.value.trim();
     const classificationMethod = document.querySelector('input[name="classificationMethod"]:checked')?.value || 'points';
     if (!tournamentName) {
-        alert('Por favor, introduce un nombre para el torneo.');
+        showNotification('Por favor, introduce un nombre para el torneo.', 'error');
         return;
     }
     // Crea un nuevo documento con un ID automático en la colección 'tournaments'
@@ -36,38 +92,30 @@ function loadTournament(id) {
 }
 
 async function deleteTournament(id, name) {
-    const password = prompt("Para realizar esta acción, por favor introduce la contraseña:");
-    if (password === null) return; // El usuario pulsó "Cancelar"
+    const confirmed = await showConfirm({
+        title: 'Borrar Torneo',
+        message: `¿Estás seguro de que quieres borrar el torneo "${name}"? Esta acción es permanente y no se puede deshacer.`,
+        okText: 'Borrar Permanentemente',
+        isDanger: true,
+        needsPassword: true
+    });
 
-    if (password !== "Traid1959") {
-        alert("Contraseña incorrecta. La operación ha sido cancelada.");
-        return;
-    }
-
-    // Si la contraseña es correcta, se continúa con la confirmación
-    if (confirm(`¿Estás seguro de que quieres borrar el torneo "${name}"? Esta acción es permanente.`)) {
+    if (confirmed) {
         try {
             await db.collection('tournaments').doc(id).delete();
             console.log(`Torneo ${id} borrado.`);
+            showNotification('Torneo eliminado correctamente.', 'success');
         } catch (error) {
             console.error("Error al borrar el torneo: ", error);
-            alert("Hubo un error al intentar borrar el torneo.");
+            showNotification("Hubo un error al intentar borrar el torneo.", "error");
         }
     }
 }
 
 function copyTournament(idToCopy, originalName) {
-    const password = prompt("Para realizar esta acción, por favor introduce la contraseña:");
-    if (password === null) return; // El usuario pulsó "Cancelar"
-
-    if (password !== "Traid1959") {
-        alert("Contraseña incorrecta. La operación ha sido cancelada.");
-        return;
-    }
-    
-    // Si la contraseña es correcta, mostramos el modal
     document.getElementById('copyTournamentId').value = idToCopy;
     document.getElementById('copyTournamentName').value = `Copia de ${originalName}`;
+    document.getElementById('copyPassword').value = '';
     document.getElementById('copyTournamentModal').style.display = 'block';
 }
 
@@ -76,16 +124,22 @@ async function performCopy() {
         const idToCopy = document.getElementById('copyTournamentId').value;
         const newName = document.getElementById('copyTournamentName').value.trim();
         const copyOption = document.querySelector('input[name="copyOption"]:checked').value;
+        const password = document.getElementById('copyPassword').value;
 
         if (!newName) {
-            alert("Debes introducir un nombre para el torneo.");
+            showNotification("Introduce un nombre para el torneo.", "error");
+            return;
+        }
+
+        if (password !== "Traid1959") {
+            showNotification("Contraseña incorrecta", "error");
             return;
         }
 
         const docRef = db.collection('tournaments').doc(idToCopy);
         const doc = await docRef.get();
         if (!doc.exists) {
-            alert('Error: El torneo que intentas copiar no existe.');
+            showNotification('El torneo original no existe.', 'error');
             return;
         }
 
@@ -116,13 +170,12 @@ async function performCopy() {
 
         const newDocRef = await db.collection('tournaments').add(newData);
         
-        alert(`Torneo copiado con éxito. El nuevo torneo es "${newData.name}".`);
+        showNotification(`Torneo "${newData.name}" copiado con éxito.`, 'success');
         document.getElementById('copyTournamentModal').style.display = 'none';
-        window.location.reload();
 
     } catch (error) {
         console.error("Error al copiar el torneo: ", error);
-        alert("Hubo un error al intentar copiar el torneo.");
+        showNotification("Error al intentar copiar el torneo.", "error");
         document.getElementById('copyTournamentModal').style.display = 'none';
     }
 }

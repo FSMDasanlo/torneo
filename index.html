@@ -180,6 +180,10 @@
             <input type="text" id="copyTournamentName" class="input-field" style="width: 95%;">
         </div>
         <div class="input-group-modal">
+            <label for="copyPassword">Contraseña de administrador:</label>
+            <input type="password" id="copyPassword" class="input-field" style="width: 95%;">
+        </div>
+        <div class="input-group-modal">
             <h4>Opciones de copia:</h4>
             <div class="radio-group">
                 <label><input type="radio" name="copyOption" value="pairs_only" checked> Copiar solo configuración y parejas</label>                
@@ -188,6 +192,28 @@
         </div>
         <button id="confirmCopyBtn" class="btn-primary">Confirmar Copia</button>
     </div>
+</div>
+
+<!-- Modal Genérico de Confirmación -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content confirm-modal-content">
+        <i id="confirmIcon" class="fas fa-exclamation-circle"></i>
+        <h2 id="confirmTitle">¿Estás seguro?</h2>
+        <p id="confirmMessage"></p>
+        <div id="confirmPasswordArea" class="input-group-modal" style="display:none; text-align: left;">
+            <label for="confirmPasswordInput">Contraseña requerida:</label>
+            <input type="password" id="confirmPasswordInput" style="width: 100%;">
+        </div>
+        <div class="confirm-modal-buttons">
+            <button id="confirmCancelBtn" class="btn-secondary">Cancelar</button>
+            <button id="confirmOkBtn" class="btn-primary">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Contenedor para notificaciones -->
+<div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 2001;">
+    <!-- Las notificaciones se añadirán aquí -->
 </div>
 
 <!-- Scripts de Firebase y de la aplicación -->

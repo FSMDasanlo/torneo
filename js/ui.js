@@ -43,13 +43,13 @@ function handleUpdateLimit(){
     if (newLimit >= 2) {
         updateGroupLimit(newLimit); // Llama a la lógica de app.js
     } else {
-        alert('El límite debe ser al menos 2.');
+        showNotification('El límite debe ser al menos 2.', 'error');
         document.getElementById('limitInput').value = groupLimit; // Vuelve al valor anterior
     }
 }
 
 // --- NUEVO: Lógica de cambio de modo ---
-function handleModeChange(forceHide = false) {
+async function handleModeChange(forceHide = false) {
     const mode = document.querySelector('input[name="tournamentMode"]:checked').value;
     
     // Ocultar todos los paneles de inputs
@@ -67,7 +67,12 @@ function handleModeChange(forceHide = false) {
     if (mode !== tournamentMode) {
         // Si hay datos en el torneo, es una acción destructiva, así que pedimos confirmación.
         if (groups[1].length > 0 || groups[2].length > 0 || drawPool.length > 0) {
-            if (confirm("Cambiar de modo borrará las parejas y jugadores actuales. ¿Continuar?")) {
+            const confirmed = await showConfirm({
+                title: 'Cambiar Modo',
+                message: 'Cambiar de modo borrará las parejas y jugadores actuales. ¿Continuar?',
+                isDanger: true
+            });
+            if (confirmed) {
                 setTournamentMode(mode); // Lógica en app.js
             } else {
                 // Si cancela, vuelve a seleccionar el radio button anterior
@@ -77,8 +82,13 @@ function handleModeChange(forceHide = false) {
     }
 }
 
-function handleClearGroupResults() {
-    if (confirm('¿Estás seguro de que quieres borrar todos los resultados de la fase de grupos? Los enfrentamientos se mantendrán.')) {
+async function handleClearGroupResults() {
+    const confirmed = await showConfirm({
+        title: 'Limpiar Resultados',
+        message: '¿Estás seguro de que quieres borrar todos los resultados de la fase de grupos? Los enfrentamientos se mantendrán.',
+        isDanger: true
+    });
+    if (confirmed) {
         clearGroupResults(); // Lógica en app.js
     }
 }
@@ -215,8 +225,12 @@ function renderCurrentPairs(){
         drawButton.className = 'btn-primary';
         drawButton.style.marginTop = '15px';
         drawButton.innerHTML = '<i class="fas fa-dice"></i> Realizar Sorteo';
-        drawButton.onclick = () => {
-            if (confirm("¿Realizar el sorteo? Esto asignará las parejas/jugadores a los grupos y limpiará la bolsa.")) {
+        drawButton.onclick = async () => {
+            const confirmed = await showConfirm({
+                title: 'Realizar Sorteo',
+                message: 'Esto asignará las parejas a los grupos y vaciará la bolsa. ¿Continuar?'
+            });
+            if (confirmed) {
                 performDraw(); // Lógica en app.js
                 document.querySelector('.tab-button[onclick*="tab-grupos"]').click(); // Cambia a la pestaña "Cuadro"
             }
@@ -240,7 +254,7 @@ function handleAddPair(){
   
   if(p1 && p2){
     if (groups[group] && groups[group].length >= groupLimit) {
-         alert(`ERROR: No se pueden añadir más de ${groupLimit} parejas al Grupo ${group}.`);
+         showNotification(`No se pueden añadir más de ${groupLimit} parejas al Grupo ${group}.`, 'error');
          return;
     }
     addPair(group, p1, p2); // Lógica en app.js
@@ -248,7 +262,7 @@ function handleAddPair(){
     document.getElementById('player2').value = '';
     document.getElementById('player1').focus();
   } else {
-    alert('Debes introducir el nombre de los dos jugadores.');
+    showNotification('Debes introducir el nombre de los dos jugadores.', 'error');
   }
 }
 
@@ -261,7 +275,7 @@ function handleAddSemiPair() {
         document.getElementById('semi-p2').value = '';
         document.getElementById('semi-p1').focus();
     } else {
-        alert('Debes introducir el nombre de los dos jugadores.');
+        showNotification('Debes introducir el nombre de los dos jugadores.', 'error');
     }
 }
 
@@ -272,12 +286,17 @@ function handleAddOpenPlayer() {
         document.getElementById('open-player').value = '';
         document.getElementById('open-player').focus();
     } else {
-        alert('Debes introducir un nombre de jugador.');
+        showNotification('Debes introducir un nombre de jugador.', 'error');
     }
 }
 
-function handleDeletePair(pairId){
-    if(confirm('¿Estás seguro de que quieres eliminar esta pareja? Esto borrará cualquier resultado asociado.')){
+async function handleDeletePair(pairId) {
+    const confirmed = await showConfirm({
+        title: 'Eliminar Pareja',
+        message: '¿Estás seguro de que quieres eliminar esta pareja? Esto borrará sus resultados y enfrentamientos.',
+        isDanger: true
+    });
+    if (confirmed) {
         deletePair(pairId); // Lógica en app.js
     }
 }
@@ -416,13 +435,40 @@ function handleRecordResult(id){
   showNotification('Resultado registrado correctamente.');
 }
 
-function showNotification(message) {
-    const container = document.getElementById('notification-container');
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = message;
-    container.appendChild(notification);
-    setTimeout(() => { notification.remove(); }, 3000);
+function showConfirm({ title, message, okText, isDanger = false, needsPassword = false }) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const titleEl = document.getElementById('confirmTitle');
+        const messageEl = document.getElementById('confirmMessage');
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        const icon = document.getElementById('confirmIcon');
+        const pwdArea = document.getElementById('confirmPasswordArea');
+        const pwdInput = document.getElementById('confirmPasswordInput');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        okBtn.textContent = okText || 'Aceptar';
+        okBtn.className = isDanger ? 'btn-danger' : 'btn-primary';
+        icon.className = isDanger ? 'fas fa-exclamation-triangle' : 'fas fa-question-circle';
+        pwdArea.style.display = needsPassword ? 'block' : 'none';
+        pwdInput.value = '';
+
+        modal.style.display = 'block';
+
+        okBtn.onclick = () => {
+            if (needsPassword && pwdInput.value !== "Traid1959") {
+                showNotification("Contraseña incorrecta", "error");
+                return;
+            }
+            modal.style.display = 'none';
+            resolve(true);
+        };
+        cancelBtn.onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+        };
+    });
 }
 
 function handleShowStandings(standingsData){
@@ -664,9 +710,14 @@ function renderGallery(imageUrls = []) {
 
         // Añadir eventos a los nuevos botones de eliminar
         slideContainer.querySelectorAll('.btn-delete-img').forEach((button, index) => {
-            button.onclick = () => {
+            button.onclick = async () => {
                 const imageUrlToDelete = imageUrls[index];
-                if (confirm('¿Estás seguro de que quieres eliminar esta imagen? Esta acción no se puede deshacer.')) {
+                const confirmed = await showConfirm({
+                    title: 'Eliminar Imagen',
+                    message: '¿Estás seguro de que quieres eliminar esta imagen de la galería?',
+                    isDanger: true
+                });
+                if (confirmed) {
                     deleteImage(imageUrlToDelete); // Lógica en app.js
                 }
             };

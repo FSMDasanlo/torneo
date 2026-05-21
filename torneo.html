@@ -211,6 +211,23 @@
         </div>
     </div>
   </div> 
+
+  <!-- Modal Genérico de Confirmación -->
+  <div id="confirmModal" class="modal">
+      <div class="modal-content confirm-modal-content">
+          <i id="confirmIcon" class="fas fa-exclamation-circle"></i>
+          <h2 id="confirmTitle">¿Estás seguro?</h2>
+          <p id="confirmMessage"></p>
+          <div id="confirmPasswordArea" class="input-group-modal" style="display:none; text-align: left;">
+              <label for="confirmPasswordInput">Contraseña requerida:</label>
+              <input type="password" id="confirmPasswordInput" style="width: 100%;">
+          </div>
+          <div class="confirm-modal-buttons">
+              <button id="confirmCancelBtn" class="btn-secondary">Cancelar</button>
+              <button id="confirmOkBtn" class="btn-primary">Confirmar</button>
+          </div>
+      </div>
+  </div>
   
   <!-- Scripts de Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
