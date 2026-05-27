@@ -24,6 +24,7 @@ let thirdPlace = null;
 let fifthPlaceMatch = null; // Nuevo: Partido 5º-6º puesto
 let seventhPlaceMatch = null; // Nuevo: Partido 7º-8º puesto
 let groupLimit = 4;
+let maxSets = 5; // Por defecto 5 para compatibilidad
 let nextColorIndex = 0; // Nuevo: Índice para la paleta de colores
 let tournamentMode = 'directed'; // Nuevo: 'directed', 'semi-directed', 'open'
 let classificationMethod = 'points'; // Nuevo: criterio de clasificación por proyecto
@@ -70,6 +71,7 @@ async function saveTournamentData() {
     tournamentMode,
     classificationMethod,
     drawPool,
+    maxSets,
   };
   try {
     // Usamos .update() en lugar de .set() para no borrar campos que no gestionamos aquí (como createdAt)
@@ -101,6 +103,7 @@ function loadTournamentData() {
       fifthPlaceMatch = saved.fifthPlaceMatch || null;
       seventhPlaceMatch = saved.seventhPlaceMatch || null;
       groupLimit = saved.groupLimit || 4;
+      maxSets = saved.maxSets || 5;
       tournamentName = saved.name || "Torneo sin nombre"; // Cargar el nombre del torneo
       nextColorIndex = saved.nextColorIndex || 0; 
       tournamentMode = saved.tournamentMode || 'directed';
@@ -185,6 +188,11 @@ function hasTournamentStarted() {
 
 function updateGroupLimit(limit) {
   groupLimit = limit;
+  saveTournamentData();
+}
+
+function updateMaxSets(limit) {
+  maxSets = limit;
   saveTournamentData();
 }
 
@@ -382,11 +390,11 @@ function generateGroupMatches() {
 }
 
 // Registrar resultado de fase de grupos
-function recordResult(matchId, set1, set2, set3, set4, set5) {
+function recordResult(matchId, ...sets) {
   const match = matches.find((m) => m.id === matchId);
   if (match) {
-    // Guardamos siempre los 5 sets. La UI ahora envía {a:0, b:0} para los no jugados.
-    match.sets = [set1, set2, set3, set4, set5];
+    // Guardamos el array dinámico de sets
+    match.sets = sets;
     saveTournamentData();
   }
 }
@@ -619,11 +627,11 @@ function calculateKnockoutWinner(match) {
 }
 
 // Registrar semifinal
-function recordSemiResult(semiId, set1, set2, set3, set4, set5) {
+function recordSemiResult(semiId, ...sets) {
   // Convertimos el semiId (que viene como string desde la UI) a número para la comparación estricta.
   const s = semifinals.find((x) => x.id === parseFloat(semiId));
   if (s) {
-    s.sets = [set1, set2, set3, set4, set5];
+    s.sets = sets;
     s.winner = calculateKnockoutWinner(s);
     saveTournamentData();
   }
@@ -655,17 +663,17 @@ function generateFinals() {
 }
 
 // Registrar resultado final
-function recordFinalResult(set1, set2, set3, set4, set5) {
+function recordFinalResult(...sets) {
   if (!finalMatch) return;
-  finalMatch.sets = [set1, set2, set3, set4, set5];
+  finalMatch.sets = sets;
   finalMatch.winner = calculateKnockoutWinner(finalMatch);
   saveTournamentData();
 }
 
 // Registrar resultado 3er puesto
-function recordThirdPlaceResult(set1, set2, set3, set4, set5) {
+function recordThirdPlaceResult(...sets) {
   if (!thirdPlace) return;
-  thirdPlace.sets = [set1, set2, set3, set4, set5];
+  thirdPlace.sets = sets;
   thirdPlace.winner = calculateKnockoutWinner(thirdPlace);
   saveTournamentData();
 }
@@ -689,9 +697,9 @@ function generateFifthPlaceMatch() {
 }
 
 // Registra el resultado del partido por el 5º puesto
-function recordFifthPlaceResult(s1, s2, s3, s4, s5) {
+function recordFifthPlaceResult(...sets) {
     if (!fifthPlaceMatch) return;
-    fifthPlaceMatch.sets = [s1, s2, s3, s4, s5];
+    fifthPlaceMatch.sets = sets;
     fifthPlaceMatch.winner = calculateKnockoutWinner(fifthPlaceMatch);
     saveTournamentData();
 }
@@ -711,9 +719,9 @@ function generateSeventhPlaceMatch() {
 }
 
 // Registra el resultado del partido por el 7º puesto
-function recordSeventhPlaceResult(s1, s2, s3, s4, s5) {
+function recordSeventhPlaceResult(...sets) {
     if (!seventhPlaceMatch) return;
-    seventhPlaceMatch.sets = [s1, s2, s3, s4, s5];
+    seventhPlaceMatch.sets = sets;
     seventhPlaceMatch.winner = calculateKnockoutWinner(seventhPlaceMatch);
     saveTournamentData();
 }

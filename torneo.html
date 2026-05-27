@@ -89,9 +89,15 @@
         </p>
       </div>
 
-      <div class="input-limit">
-          <label for="limitInput">Límite de parejas por grupo:</label>
-          <input type="number" id="limitInput" value="4" min="2" onchange="handleUpdateLimit()">
+      <div class="tournament-settings-compact">
+          <div class="setting-pill">
+              <label for="limitInput"><i class="fas fa-users"></i> Parejas:</label>
+              <input type="number" id="limitInput" value="4" min="2" onchange="handleUpdateLimit()">
+          </div>
+          <div class="setting-pill">
+              <label for="setsInput"><i class="fas fa-layer-group"></i> Sets:</label>
+              <input type="number" id="setsInput" value="3" min="1" max="5" onchange="handleUpdateMaxSets()">
+          </div>
       </div>
 
       <!-- Modo Dirigido (el original) -->
@@ -100,21 +106,21 @@
           <option value="1">Grupo 1</option>
           <option value="2">Grupo 2</option>
         </select>
-        <input type="text" id="player1" placeholder="Jugador 1">
-        <input type="text" id="player2" placeholder="Jugador 2">
+        <input type="text" id="player1" placeholder="Jugador 1" autocomplete="off">
+        <input type="text" id="player2" placeholder="Jugador 2" autocomplete="off">
         <button id="addPairBtn" class="btn-primary"><i class="fas fa-plus"></i> Añadir Pareja</button>
       </div>
 
       <!-- Modo Semidirigido -->
       <div id="mode-semi-directed-inputs" class="input-group" style="margin-top: 15px; display: none;">
-        <input type="text" id="semi-p1" placeholder="Jugador 1">
-        <input type="text" id="semi-p2" placeholder="Jugador 2">
+        <input type="text" id="semi-p1" placeholder="Jugador 1" autocomplete="off">
+        <input type="text" id="semi-p2" placeholder="Jugador 2" autocomplete="off">
         <button id="addSemiPairBtn" class="btn-primary"><i class="fas fa-plus"></i> Añadir Pareja a la Bolsa</button>
       </div>
 
       <!-- Modo Abierto -->
       <div id="mode-open-inputs" class="input-group" style="margin-top: 15px; display: none;">
-        <input type="text" id="open-player" placeholder="Nombre del Jugador">
+        <input type="text" id="open-player" placeholder="Nombre del Jugador" autocomplete="off">
         <button id="addOpenPlayerBtn" class="btn-primary"><i class="fas fa-user-plus"></i> Añadir Jugador a la Bolsa</button>
       </div>
 
@@ -140,7 +146,10 @@
     </div>
 
     <div id="tab-clasificacion" class="tab-content card">
-      <h2><i class="fas fa-sort-amount-down"></i> Clasificación de Grupos</h2>
+      <div class="section-header">
+        <h2><i class="fas fa-sort-amount-down"></i> Clasificación de Grupos</h2>
+        <button id="exportStandingsBtn" class="btn-secondary"><i class="fas fa-file-pdf"></i> Exportar Clasificación</button>
+      </div>
       <p id="classificationMethodLabel" style="margin: 10px 0 0; color: #555; font-size: 0.95em;"></p>
       <div id="standings" class="standings-view" style="margin-top: 15px;"></div>
     </div>
@@ -201,13 +210,25 @@
             <input type="hidden" id="editPairId">
             <div class="input-group-modal">
                 <label for="editPlayer1">Jugador 1:</label>
-                <input type="text" id="editPlayer1">
+                <input type="text" id="editPlayer1" autocomplete="off">
             </div>
             <div class="input-group-modal">
                 <label for="editPlayer2">Jugador 2:</label>
-                <input type="text" id="editPlayer2">
+                <input type="text" id="editPlayer2" autocomplete="off">
             </div>
             <button id="savePairChangesBtn" class="btn-primary">Guardar Cambios</button>
+        </div>
+    </div>
+
+    <!-- Modal para ver resultados de una pareja -->
+    <div id="pairResultsModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-button">&times;</span>
+            <h2 id="pairResultsTitle">Resultados</h2>
+            <div id="pairResultsBody"></div>
+            <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                <button id="exportPairBtn" class="btn-secondary"><i class="fas fa-file-pdf"></i> Exportar Historial</button>
+            </div>
         </div>
     </div>
   </div> 
@@ -233,6 +254,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+  <!-- Librerías para exportar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <!-- Inicialización de Firebase -->
   <script>

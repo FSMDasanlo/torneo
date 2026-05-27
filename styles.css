@@ -144,19 +144,45 @@ input:focus, select:focus {
   background-color: #546e7a;
 }
 
-/* --- Estilos de gestión de Parejas y Límite --- */
+/* --- Estilos de configuración compacta en gestión --- */
+.tournament-settings-compact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    padding: 12px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border: 1px solid #e0e6ed;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
 
-.input-limit {
+.setting-pill {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
 }
 
-.input-limit input[type="number"] {
-    width: 60px;
+.setting-pill i {
+    color: #8BC34A;
+    font-size: 1.1em;
+}
+
+.setting-pill label {
+    font-weight: 600;
+    color: #4a6572;
+    font-size: 0.9em;
+}
+
+.setting-pill input[type="number"] {
+    width: 50px;
+    padding: 5px;
     text-align: center;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #34495e;
     flex-grow: 0;
 }
 
@@ -307,6 +333,7 @@ input:focus, select:focus {
     width: 250px; /* Ancho fijo para todas las cajas */
     white-space: nowrap; 
     color: #333; 
+    cursor: pointer;
     /* El color de fondo y el borde se aplican con estilo inline desde index.html */
 }
 
@@ -800,3 +827,108 @@ input:focus, select:focus {
 
 @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 @keyframes slideIn { from {transform: translateY(-50px);} to {transform: translateY(0);} }
+
+/* ======================================================= */
+/* === ESTILOS PARA LA TARJETA DE CREACIÓN ============== */
+/* ======================================================= */
+
+#createTournamentCard {
+    border-top: 6px solid #8BC34A;
+    background: linear-gradient(to bottom right, #ffffff, #f9fbf7);
+    max-width: 650px;
+    margin: 0 auto 30px auto;
+    animation: fadeInDown 0.5s ease-out;
+    border-radius: 16px;
+}
+
+.creation-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.creation-header h2 {
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: #34495e;
+    font-size: 1.8em;
+}
+
+.creation-header p {
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+
+.setup-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #4a6572;
+    font-size: 0.95em;
+}
+
+.radio-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.radio-pill {
+    flex: 1;
+    cursor: pointer;
+}
+
+.radio-pill input {
+    display: none; /* Escondemos el radio original */
+}
+
+.radio-pill span {
+    display: block;
+    padding: 10px;
+    text-align: center;
+    background: #ecf0f1;
+    border-radius: 8px;
+    font-size: 0.9em;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.radio-pill input:checked + span {
+    background: #8BC34A;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(139, 195, 74, 0.3);
+}
+
+.sets-input-main {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.creation-footer {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.btn-large {
+    padding: 15px 40px;
+    font-size: 1.1em;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(52, 73, 94, 0.3);
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+    .setup-grid { grid-template-columns: 1fr; }
+}

@@ -142,19 +142,32 @@
 
     <!-- Contenedor para crear torneo, ahora oculto por defecto -->
     <div id="createTournamentCard" class="card" style="display: none;">
-        <h2>Crear Nuevo Torneo</h2>
-        <div class="input-group">
-            <input type="text" id="newTournamentName" placeholder="Nombre del nuevo torneo (ej. Torneo de Verano 2024)">
+        <div class="creation-header">
+            <h2><i class="fas fa-plus-circle"></i> Configurar Nuevo Torneo</h2>
+            <p>Define las reglas y prepárate para la competición</p>
         </div>
+        
         <div class="input-group">
-            <label style="margin-bottom: 8px; display: block; font-weight: 600;">Criterio de clasificación:</label>
-            <div class="radio-group">
-                <label><input type="radio" name="classificationMethod" value="points" checked> Puntos + Sets + Juegos</label>
-                <label><input type="radio" name="classificationMethod" value="gameDifference"> Diferencia Juegos Ganados - Juegos Perdidos</label>
+            <label for="newTournamentName"><i class="fas fa-signature"></i> Nombre del Torneo</label>
+            <input type="text" id="newTournamentName" placeholder="Nombre del nuevo torneo (ej. Torneo de Verano 2024)" autocomplete="off">
+        </div>
+
+        <div class="setup-grid">
+            <div class="input-group">
+                <label><i class="fas fa-list-ol"></i> Criterio de Clasificación</label>
+                <div class="radio-selector">
+                    <label class="radio-pill"><input type="radio" name="classificationMethod" value="points" checked> <span>Puntos + Sets</span></label>
+                    <label class="radio-pill"><input type="radio" name="classificationMethod" value="gameDifference"> <span>Dif. Juegos</span></label>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="newTournamentSets"><i class="fas fa-layer-group"></i> Sets por Partido</label>
+                <input type="number" id="newTournamentSets" value="3" min="1" max="5" class="sets-input-main">
             </div>
         </div>
-        <div class="input-group">
-            <button class="btn-primary"><i class="fas fa-plus"></i> Crear y Abrir</button>
+
+        <div class="creation-footer">
+            <button class="btn-primary btn-large" onclick="createNewTournament()"><i class="fas fa-rocket"></i> Crear y Empezar</button>
         </div>
     </div>
 

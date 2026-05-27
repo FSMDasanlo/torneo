@@ -72,6 +72,8 @@ async function createNewTournament() {
     const nameInput = document.getElementById('newTournamentName');
     const tournamentName = nameInput.value.trim();
     const classificationMethod = document.querySelector('input[name="classificationMethod"]:checked')?.value || 'points';
+    const setsInput = document.getElementById('newTournamentSets');
+    const maxSets = parseInt(setsInput ? setsInput.value : 3) || 3;
     if (!tournamentName) {
         showNotification('Por favor, introduce un nombre para el torneo.', 'error');
         return;
@@ -80,6 +82,7 @@ async function createNewTournament() {
     const newDocRef = await db.collection('tournaments').add({
         name: tournamentName,
         classificationMethod,
+        maxSets,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Guarda la fecha de creación
         groups: { 1: [], 2: [] }, matches: [], semifinals: [], finalMatch: null, thirdPlace: null, groupLimit: 4, nextColorIndex: 0
     });
@@ -150,6 +153,7 @@ async function performCopy() {
         const newData = {
             name: newName.trim(),
             classificationMethod: originalData.classificationMethod || 'points',
+            maxSets: originalData.maxSets || 5,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             
             // --- Datos que se copian siempre ---

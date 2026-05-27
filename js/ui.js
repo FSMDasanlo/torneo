@@ -16,7 +16,191 @@ function formatPairDisplay(pair) {
     const pairName = pair.players.join(separator);
     const color = pair.color || '#E0E0E0'; // Color por defecto si no existe
     const borderColor = color.replace('C', 'B').replace('F', 'E');
-    return `<span class="pair-box" style="background-color: ${color}; border: 1px solid ${borderColor};">${pairName}</span>`;
+    return `<span class="pair-box" style="background-color: ${color}; border: 1px solid ${borderColor};" onclick="event.stopPropagation(); handlePairClick(${pair.id})">${pairName}</span>`;
+}
+
+let currentPairIdForExport = null; // Variable global para saber qué pareja exportar
+
+function handlePairClick(pairId) {
+    currentPairIdForExport = pairId;
+    let pair = null;
+    for (const g in groups) {
+        pair = groups[g].find(p => p.id === pairId);
+        if (pair) break;
+    }
+    if (!pair) return;
+
+    // Recopilamos todos los partidos posibles (fase de grupos + todas las eliminatorias)
+    const allMatchesList = [
+        ...matches,
+        ...semifinals,
+        finalMatch,
+        thirdPlace,
+        fifthPlaceMatch,
+        seventhPlaceMatch
+    ].filter(m => m && m.a && m.b);
+
+    const pairMatches = allMatchesList.filter(m => m.a.id === pairId || m.b.id === pairId);
+    const modal = document.getElementById('pairResultsModal');
+    const title = document.getElementById('pairResultsTitle');
+    const body = document.getElementById('pairResultsBody');
+
+    title.innerHTML = `<i class="fas fa-history"></i> Historial: ${pair.players.join(' - ')}`;
+    
+    let html = '';
+    if (pairMatches.length === 0) {
+        html = '<p style="text-align:center; padding:20px;">No hay partidos registrados para esta pareja.</p>';
+    } else {
+        html = '<table class="standings-table"><thead><tr><th>Rival</th><th>Resultado</th></tr></thead><tbody>';
+        pairMatches.forEach(m => {
+            const isA = m.a.id === pairId;
+            const rival = isA ? m.b : m.a;
+            const res = getMatchResult(m);
+            let resStr = '<span style="color:#999">Pendiente</span>';
+            if (res) {
+                const score = isA ? `${res.setsA}-${res.setsB}` : `${res.setsB}-${res.setsA}`;
+                // Generamos el detalle de juegos por cada set disputado
+                const gamesDetail = m.sets
+                    .filter(s => s && (s.a > 0 || s.b > 0))
+                    .map(s => isA ? `${s.a}-${s.b}` : `${s.b}-${s.a}`)
+                    .join(', ');
+
+                const win = res.winner === pairId;
+                resStr = `<b style="color:${win ? '#2ecc71' : '#e74c3c'}">${score}</b>`;
+                if (gamesDetail) {
+                    resStr += `<br><span style="font-size: 0.85em; color: #666;">(${gamesDetail})</span>`;
+                }
+            }
+            html += `<tr><td>${formatPairDisplay(rival)}</td><td>${resStr}</td></tr>`;
+        });
+        html += '</tbody></table>';
+    }
+    body.innerHTML = html;
+    modal.style.display = 'block';
+}
+
+async function exportPairHistoryToPDF() {
+    if (!currentPairIdForExport) return;
+
+    let pair = null;
+    for (const g in groups) {
+        pair = groups[g].find(p => p.id === currentPairIdForExport);
+        if (pair) break;
+    }
+    if (!pair) return;
+
+    const pairName = pair.players.join(' - ');
+    const allMatchesList = [
+        ...matches,
+        ...semifinals,
+        finalMatch,
+        thirdPlace,
+        fifthPlaceMatch,
+        seventhPlaceMatch
+    ].filter(m => m && m.a && m.b);
+
+    const pairMatches = allMatchesList.filter(m => m.a.id === currentPairIdForExport || m.b.id === currentPairIdForExport);
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.setTextColor(52, 73, 94);
+    doc.text('Historial de Resultados', 14, 20);
+    
+    doc.setFontSize(14);
+    doc.text(pairName, 14, 30);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Torneo: ${tournamentName}`, 14, 38);
+    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 44);
+
+    const tableData = pairMatches.map(m => {
+        const isA = m.a.id === currentPairIdForExport;
+        const rival = isA ? m.b.players.join(' - ') : m.a.players.join(' - ');
+        const res = getMatchResult(m);
+        let scoreStr = 'Pendiente';
+        let detailStr = '';
+        if (res) {
+            scoreStr = isA ? `${res.setsA}-${res.setsB}` : `${res.setsB}-${res.setsA}`;
+            detailStr = m.sets
+                .filter(s => s && (s.a > 0 || s.b > 0))
+                .map(s => isA ? `${s.a}-${s.b}` : `${s.b}-${s.a}`)
+                .join(', ');
+            detailStr = `(${detailStr})`;
+        }
+        return [rival, scoreStr, detailStr];
+    });
+
+    doc.autoTable({
+        startY: 50,
+        head: [['Rival', 'Resultado (Sets)', 'Detalle (Juegos)']],
+        body: tableData,
+        headStyles: { fillColor: [52, 73, 94] },
+        alternateRowStyles: { fillColor: [247, 249, 251] }
+    });
+
+    doc.save(`Historial_${pairName.replace(/[^a-z0-9]/gi, '_')}.pdf`);
+}
+
+async function exportStandingsToPDF() {
+    const standings = computeStandings();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Título y Cabecera
+    doc.setFontSize(18);
+    doc.setTextColor(52, 73, 94);
+    doc.text('Clasificación General del Torneo', 14, 20);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text(`Torneo: ${tournamentName}`, 14, 28);
+    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 34);
+
+    let currentY = 40;
+    const isGameDiff = classificationMethod === 'gameDifference';
+
+    for (const g of [1, 2]) {
+        // Título del Grupo
+        doc.setFontSize(14);
+        doc.setTextColor(52, 73, 94);
+        doc.text(`Grupo ${g}`, 14, currentY + 10);
+
+        // Definir columnas según el criterio
+        const head = isGameDiff 
+            ? [['Pos', 'Pareja', 'Dif. Juegos', 'Ganados', 'Perdidos']]
+            : [['Pos', 'Pareja', 'Puntos', 'Sets', 'Juegos']];
+
+        // Preparar datos de las filas
+        const body = (standings[g] || []).map((r, index) => {
+            const pairName = r.pair.players.join(' - ') + (r.headToHeadResolved ? ' (E.D.)' : '');
+            return isGameDiff
+                ? [index + 1, pairName, r.diferenciaJuegos, r.juegos, r.gamesAgainst]
+                : [index + 1, pairName, r.puntos, r.sets, r.juegos];
+        });
+
+        if (body.length === 0) {
+            doc.setFontSize(10);
+            doc.text('No hay datos en este grupo.', 14, currentY + 20);
+            currentY += 25;
+            continue;
+        }
+
+        doc.autoTable({
+            startY: currentY + 15,
+            head: head,
+            body: body,
+            headStyles: { fillColor: [52, 73, 94] },
+            alternateRowStyles: { fillColor: [247, 249, 251] },
+            margin: { left: 14 }
+        });
+
+        currentY = doc.lastAutoTable.finalY + 10;
+    }
+
+    doc.save(`Clasificacion_${tournamentName.replace(/[^a-z0-9]/gi, '_')}.pdf`);
 }
 
 // --- Lógica de Pestañas ---
@@ -45,6 +229,16 @@ function handleUpdateLimit(){
     } else {
         showNotification('El límite debe ser al menos 2.', 'error');
         document.getElementById('limitInput').value = groupLimit; // Vuelve al valor anterior
+    }
+}
+
+function handleUpdateMaxSets(){
+    const newMax = parseInt(document.getElementById('setsInput').value);
+    if (newMax >= 1 && newMax <= 5) {
+        updateMaxSets(newMax); // Lógica en app.js
+    } else {
+        showNotification('El número de sets debe estar entre 1 y 5.', 'error');
+        document.getElementById('setsInput').value = maxSets; // Vuelve al valor anterior
     }
 }
 
@@ -113,6 +307,7 @@ function renderCurrentPairs(){
   
   // Elementos a deshabilitar/ocultar si el torneo ha empezado
   const limitInput = document.getElementById('limitInput');
+  const setsInput = document.getElementById('setsInput');
   const addPairForms = document.querySelectorAll('.input-group'); // Coge todos los formularios de añadir
 
   modeRadios.forEach(radio => {
@@ -122,6 +317,11 @@ function renderCurrentPairs(){
   });
 
   // Deshabilitar inputs si el torneo ha comenzado
+  if (setsInput) {
+    setsInput.value = maxSets;
+    setsInput.disabled = tournamentHasStarted;
+  }
+
   limitInput.disabled = tournamentHasStarted;
   if (tournamentHasStarted) {
     // Si el torneo ha empezado, ocultamos todos los formularios de añadir.
@@ -248,19 +448,36 @@ function renderCurrentPairs(){
 }
 
 function handleAddPair(){
-  const group = parseInt(document.getElementById('groupSelect').value);
+  const groupSelect = document.getElementById('groupSelect');
+  let group = parseInt(groupSelect.value);
   const p1 = document.getElementById('player1').value.trim();
   const p2 = document.getElementById('player2').value.trim();
   
   if(p1 && p2){
+    // Comprobar si el grupo seleccionado está lleno antes de intentar añadir
     if (groups[group] && groups[group].length >= groupLimit) {
-         showNotification(`No se pueden añadir más de ${groupLimit} parejas al Grupo ${group}.`, 'error');
-         return;
+        // Intentar saltar automáticamente al otro grupo si tiene hueco
+        const otherGroup = (group === 1) ? 2 : 1;
+        if (groups[otherGroup] && groups[otherGroup].length < groupLimit) {
+            showNotification(`Grupo ${group} completo. Saltando al Grupo ${otherGroup} automáticamente.`, 'info');
+            group = otherGroup;
+            groupSelect.value = group;
+        } else {
+            showNotification(`¡Atención! Ambos grupos han alcanzado el límite de ${groupLimit} parejas.`, 'error');
+            return;
+        }
     }
-    addPair(group, p1, p2); // Lógica en app.js
+
+    addPair(group, p1, p2); 
     document.getElementById('player1').value = '';
     document.getElementById('player2').value = '';
     document.getElementById('player1').focus();
+
+    // Mejora: Si tras añadir esta pareja el grupo se ha llenado, pre-seleccionamos el siguiente si hay hueco
+    const nextGroup = (group === 1) ? 2 : 1;
+    if (groups[group].length >= groupLimit && groups[nextGroup].length < groupLimit) {
+        groupSelect.value = nextGroup;
+    }
   } else {
     showNotification('Debes introducir el nombre de los dos jugadores.', 'error');
   }
@@ -383,7 +600,7 @@ function renderResultForms(){
             const registerButtonClass = hasResult ? 'btn-success' : 'btn-secondary';
             
             const sets = m.sets || [];
-            const s_vals = Array(5).fill(null).map((_, i) => ({
+            const s_vals = Array(maxSets).fill(null).map((_, i) => ({
                 a: sets[i] ? sets[i].a : '',
                 b: sets[i] ? sets[i].b : ''
             }));
@@ -394,7 +611,7 @@ function renderResultForms(){
                         <thead>
                             <tr>
                                 <th>Enfrentamiento</th>
-                                ${Array(5).fill(null).map((_, i) => `<th>Set ${i+1}</th>`).join('')}
+                                ${Array(maxSets).fill(null).map((_, i) => `<th>Set ${i+1}</th>`).join('')}
                                 <th></th>
                             </tr>
                         </thead>
@@ -422,7 +639,7 @@ function renderResultForms(){
 
 function handleRecordResult(id){
   const sets = [];
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= maxSets; i++) {
       const s_a = document.getElementById(`s${i}-a-${id}`).value;
       const s_b = document.getElementById(`s${i}-b-${id}`).value;
       if (s_a !== '' && s_b !== '') {
@@ -532,7 +749,7 @@ function renderKnockoutMatch(containerId, matchData, title, iconClass, matchIdPr
         const match = matchData;
         const id = match.id || matchIdPrefix; // Usar ID del objeto o un prefijo
         const sets = match.sets || [];
-        const s_vals = Array(5).fill(null).map((_, i) => ({
+        const s_vals = Array(maxSets).fill(null).map((_, i) => ({
             a: sets[i] ? sets[i].a : '',
             b: sets[i] ? sets[i].b : ''
         }));
@@ -549,7 +766,7 @@ function renderKnockoutMatch(containerId, matchData, title, iconClass, matchIdPr
                     <thead>
                         <tr>
                             <th>Enfrentamiento</th>
-                            ${Array(5).fill(null).map((_, i) => `<th>Set ${i+1}</th>`).join('')}
+                            ${Array(maxSets).fill(null).map((_, i) => `<th>Set ${i+1}</th>`).join('')}
                             <th></th>
                         </tr>
                     </thead>
@@ -655,7 +872,7 @@ function renderSeventhPlaceMatch() {
 
 function handleRecordKnockoutResult(matchType, id) {
     const sets = [];
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= maxSets; i++) {
         const s_a_el = document.getElementById(`${matchType}-s${i}-a-${id}`);
         const s_b_el = document.getElementById(`${matchType}-s${i}-b-${id}`);
         if (s_a_el && s_b_el) {
@@ -723,7 +940,7 @@ function renderGallery(imageUrls = []) {
             };
         });
 
-        showSlide(0);
+        showSlide(imageUrls.length - 1); // Mostrar la última imagen subida
     } else {
         slideContainer.innerHTML = '<p>Aún no hay imágenes en la galería. ¡Sube la primera!</p>';
     }
@@ -774,11 +991,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- NUEVO: Eventos para el modal de edición ---
-    const modal = document.getElementById('editPairModal');
-    document.querySelector('.close-button').addEventListener('click', () => modal.style.display = 'none');
-    window.addEventListener('click', (event) => {
-        if (event.target == modal) modal.style.display = 'none';
+    // Cerrar cualquier modal al hacer clic en su respectiva X o fuera de él
+    document.querySelectorAll('.modal').forEach(m => {
+        const closeBtn = m.querySelector('.close-button');
+        if (closeBtn) closeBtn.onclick = () => m.style.display = 'none';
+        
+        window.addEventListener('click', (event) => {
+            if (event.target == m) m.style.display = 'none';
+        });
     });
+
     document.getElementById('savePairChangesBtn').addEventListener('click', handleSaveChanges);
 
     document.getElementById('player1').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddPair(); });
@@ -796,4 +1018,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelector('.carousel-button.prev').addEventListener('click', () => moveSlide(-1));
     document.querySelector('.carousel-button.next').addEventListener('click', () => moveSlide(1));
+
+    const exportBtn = document.getElementById('exportPairBtn');
+    if (exportBtn) exportBtn.addEventListener('click', exportPairHistoryToPDF);
+
+    const exportStandingsBtn = document.getElementById('exportStandingsBtn');
+    if (exportStandingsBtn) exportStandingsBtn.addEventListener('click', exportStandingsToPDF);
 });
