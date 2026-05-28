@@ -4,18 +4,28 @@
    - Fondo: #f7f9fb (Blanco Roto Suave)
 */
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Poppins', sans-serif; /* Fuente moderna */
   margin: 0;
   padding: 0;
   background: #f7f9fb; /* Fondo suave */
   color: #333;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
 }
 
 .container {
   max-width: 960px;
   margin: 30px auto;
   padding: 0 20px;
+  width: 100%;
 }
 
 header {
@@ -325,14 +335,20 @@ input:focus, select:focus {
 /* --- Estilos de Cajas de Parejas (ACTUALIZADO) --- */
 
 .pair-box {
-    display: inline-block; /* Cambiado a inline-block para que width funcione */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 3px 8px;
     border-radius: 4px;
     font-weight: 600;
     margin: 0 5px;
-    width: 250px; /* Ancho fijo para todas las cajas */
-    white-space: nowrap; 
-    color: #333; 
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    color: #333;
     cursor: pointer;
     /* El color de fondo y el borde se aplican con estilo inline desde index.html */
 }
@@ -621,6 +637,14 @@ input:focus, select:focus {
 /* === ESTILOS RESPONSIVE (PANTALLAS PEQUEÑAS) =========== */
 /* ======================================================= */
 @media (max-width: 768px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
   .input-group, .set-inputs {
     flex-direction: column;
     align-items: stretch;
@@ -645,11 +669,23 @@ input:focus, select:focus {
     border-bottom: 1px solid #eee;
   }
 
+  .modal-content {
+    width: min(94vw, 600px);
+    max-height: 92vh;
+    margin: 5vh auto;
+    padding: 18px;
+    overflow-y: auto;
+  }
+
+  .confirm-modal-content {
+    padding: 18px;
+  }
+
   /* Ajuste para los items de partido en general */
   .match-item {
       align-items: flex-start;
       flex-direction: column;
-      width: 100%; /* Ocupa todo el ancho */
+      width: 100%;
       box-sizing: border-box;
   }
 
@@ -662,10 +698,14 @@ input:focus, select:focus {
   }
 
   /* Las cajas de pareja ocupan todo el ancho y se apilan verticalmente en los partidos */
-  .match-item .pair-box, .result-table .pair-box {
-      width: 100%; /* Las cajas de pareja ocupan todo el ancho disponible */
-      box-sizing: border-box; /* Para que el padding no sume al ancho */
+  .match-item .pair-box,
+  .result-table .pair-box {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
       margin: 2px 0;
+      text-align: center;
+      white-space: normal;
   }
 
   /* El "vs" se centra cuando las cajas de pareja se apilan */
@@ -677,16 +717,54 @@ input:focus, select:focus {
   /* Para que la tabla de resultados se pueda desplazar horizontalmente en móvil */
   .result-form-item {
       width: 100%;
-      overflow-x: auto; /* ¡Magia para el scroll horizontal! */
+      overflow-x: auto;
       box-sizing: border-box;
   }
 
   .result-table {
-      width: 100%; /* La tabla intenta ocupar el 100%, pero el overflow la controla */
+      width: 100%;
+      min-width: 320px;
   }
 
   .result-table td:first-child {
-      min-width: 150px; /* Un mínimo para que no se aplaste demasiado */
+      min-width: 150px;
+  }
+
+  .standings-table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+  }
+
+  .standings-table th,
+  .standings-table td {
+      white-space: normal;
+      word-break: break-word;
+  }
+
+  .tournament-list-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+  }
+
+  .tournament-info {
+      width: 100%;
+      min-width: 0;
+  }
+
+  .tournament-status {
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-right: 0;
+  }
+
+  .actions {
+      width: 100%;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
   }
 }
  /* --- Estilos de la Galería / Carrusel --- */
